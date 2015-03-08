@@ -20,6 +20,8 @@ import javax.swing.event.MouseInputAdapter;
 
 import org.openscience.cdk.interfaces.IAtomContainer;
 
+import viewer.StructureDisplay;
+
 /**
  * 
  * <p>
