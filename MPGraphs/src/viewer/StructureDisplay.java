@@ -1,4 +1,4 @@
-package main;
+package viewer;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -118,7 +118,6 @@ public class StructureDisplay extends JPanel{
 		this.mol = mol.clone();
 		drawMol();
 		isEmpty = mol.isEmpty();
-		//repaint();
 	}
 
 	public IAtomContainer getMol() {return this.mol;}

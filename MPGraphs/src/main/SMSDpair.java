@@ -17,6 +17,8 @@ import org.openscience.smsd.Isomorphism;
 import org.openscience.smsd.interfaces.Algorithm;
 import org.openscience.smsd.tools.ExtAtomContainerManipulator;
 
+import viewer.StructureDisplay;
+
 
 
 public final class SMSDpair{
