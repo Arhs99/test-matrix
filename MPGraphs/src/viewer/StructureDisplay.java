@@ -118,7 +118,6 @@ public class StructureDisplay extends JPanel{
 		this.mol = mol.clone();
 		drawMol();
 		isEmpty = mol.isEmpty();
-		//repaint();
 	}
 
 	public IAtomContainer getMol() {return this.mol;}
