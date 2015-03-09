@@ -1,4 +1,4 @@
-package main;
+package viewer;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -11,7 +11,8 @@ import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import viewer.StructureDisplay;
+import main.Molecule;
+
 
 public class SideDisplay extends JPanel {
 	/**
