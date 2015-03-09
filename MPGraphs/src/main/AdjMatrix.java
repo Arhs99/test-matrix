@@ -25,6 +25,9 @@ import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.similarity.Tanimoto;
 import org.openscience.smsd.tools.ExtAtomContainerManipulator;
 
+import viewer.HeatMap;
+import viewer.SideDisplay;
+
 import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.impl.DenseObjectMatrix2D;

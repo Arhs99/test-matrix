@@ -1,4 +1,4 @@
-package main;
+package viewer;
 
 //package edu.purdue.touch.util;
 
@@ -18,9 +18,13 @@ import javax.swing.JToolTip;
 import javax.swing.ToolTipManager;
 import javax.swing.event.MouseInputAdapter;
 
+import main.AdjMatrix;
+import main.Gradient;
+import main.Molecule;
+import main.SMSDpair;
+
 import org.openscience.cdk.interfaces.IAtomContainer;
 
-import viewer.StructureDisplay;
 
 /**
  * 

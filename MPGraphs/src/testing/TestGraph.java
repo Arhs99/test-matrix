@@ -1,4 +1,4 @@
-package main;
+package testing;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -12,6 +12,11 @@ import java.util.Scanner;
 import java.util.TreeSet;
 
 import javax.swing.JFrame;
+
+import main.AdjMatrix;
+import main.Gradient;
+import main.Molecule;
+import main.SDFreader;
 
 import org.apache.commons.collections15.Factory;
 import org.apache.commons.collections15.Transformer;

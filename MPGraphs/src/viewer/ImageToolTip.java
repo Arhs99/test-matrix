@@ -1,4 +1,4 @@
-package main;
+package viewer;
 
 
 import java.awt.Color;
@@ -15,7 +15,6 @@ import javax.swing.plaf.metal.MetalToolTipUI;
 
 import org.openscience.cdk.renderer.visitor.AWTDrawVisitor;
 
-import viewer.StructureDisplay;
 
 
 class ImageToolTip extends JToolTip {
