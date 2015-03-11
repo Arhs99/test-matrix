@@ -18,7 +18,7 @@ import org.openscience.cdk.io.iterator.IteratingSDFReader;
 
 
 public class SDFreader {
-	private IChemSequence sequence;
+	//private IChemSequence sequence;
 	private HashSet<String> fields;
 	private String[] fieldStr;
 	private Map<IAtomContainer,String[]> sdfMap;
@@ -54,15 +54,15 @@ public class SDFreader {
 		}
 	}
 
-	public Set<IAtomContainer> set() {
-		int n = this.sequence.getChemModelCount();
-		HashSet<IAtomContainer> set = new HashSet<IAtomContainer>();
-		for (int i = 0; i < n; i++) {
-			IChemModel mod = this.sequence.getChemModel(i);
-			set.add(mod.getMoleculeSet().getAtomContainer(0));
-		}
-		return set;
-	}
+//	public Set<IAtomContainer> set() {
+//		int n = this.sequence.getChemModelCount();
+//		HashSet<IAtomContainer> set = new HashSet<IAtomContainer>();
+//		for (int i = 0; i < n; i++) {
+//			IChemModel mod = this.sequence.getChemModel(i);
+//			set.add(mod.getMoleculeSet().getAtomContainer(0));
+//		}
+//		return set;
+//	}
 
 	/**
 	 * Returns a set of fields from the sdf file
