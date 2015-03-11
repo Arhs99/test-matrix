@@ -141,7 +141,7 @@ public class AdjMatrix {
 		}
 		Molecule[][] molVec = new Molecule[cc.count][];
 		for (int i = 0; i < cc.count; ++i) {
-			Collections.sort(cc.compArr.get(i));	//Essential to sort this vector so 'for' loop below traverses it on order
+			Collections.sort(cc.compArr.get(i));	//Essential to sort this vector so 'for' loop below traverses it in order
 			molVec[i] = new Molecule[cc.compArr.get(i).toArray().length];
 			for(int a = 0; a < cc.compArr.get(i).toArray().length; ++a) {
 				molVec[i][a] =  molArray[(int) cc.compArr.get(i).toArray()[a]];
