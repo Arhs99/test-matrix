@@ -4,8 +4,11 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
+import java.util.Deque;
 
 import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.DefaultChemObjectBuilder;
@@ -18,8 +21,7 @@ import org.openscience.cdk.io.iterator.IteratingSDFReader;
 
 
 public class SDFreader {
-	//private IChemSequence sequence;
-	private HashSet<String> fields;
+	private Queue<String> fields;
 	private String[] fieldStr;
 	private Map<IAtomContainer,String[]> sdfMap;
 	public SDFreader(String file) throws Exception {
@@ -28,15 +30,19 @@ public class SDFreader {
 				in, DefaultChemObjectBuilder.getInstance()
 				);
 		reader.setSkip(true);
-		fields = new HashSet<String>();
+		fields = new LinkedList<String>();
 		IAtomContainerSet molSet = DefaultChemObjectBuilder.getInstance().newInstance
 				(IAtomContainerSet.class);
 		while (reader.hasNext()) {
 			IAtomContainer mol = reader.next();
 			molSet.addAtomContainer(mol);
 			Map<Object, Object> map = mol.getProperties();
+			map.remove("cdk:Title");
+			map.remove("cdk:Remark");
 			for (Object s : map.keySet()) {
-				fields.add((String) s);
+				if (!fields.contains(s)){
+					fields.add((String) s);
+				}
 			}
 		}
 
@@ -69,7 +75,7 @@ public class SDFreader {
 	 * 
 	 * @return
 	 */
-	public Set<String> fields() {	//change to private 
+	public Queue<String> fields() {	
 		return fields;
 	}
 
@@ -105,18 +111,18 @@ public class SDFreader {
 					System.out.print(s + " | ");
 				}
 				System.out.println();
-				for (IAtomContainer mol : sdf.sdfMap().keySet()) {
-					System.out.print(mol.getAtomCount() + " | ");
-					for (int i = 0; i < fieldsSet.length; ++i) {
-						String val = sdf.sdfMap().get(mol)[i];
-						if (val == null) {
-							System.out.print("null | ");
-						} else {
-						System.out.print(val + " | ");
-						}
-					}
-					System.out.println();
-				}
+//				for (IAtomContainer mol : sdf.sdfMap().keySet()) {
+//					System.out.print(mol.getAtomCount() + " | ");
+//					for (int i = 0; i < fieldsSet.length; ++i) {
+//						String val = sdf.sdfMap().get(mol)[i];
+//						if (val == null) {
+//							System.out.print("null | ");
+//						} else {
+//						System.out.print(val + " | ");
+//						}
+//					}
+//					System.out.println();
+//				}
 	}
 
 }
