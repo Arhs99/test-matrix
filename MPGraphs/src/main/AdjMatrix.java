@@ -42,7 +42,6 @@ public class AdjMatrix {
 
 	public AdjMatrix(TreeSet<Molecule> map) {		
 		molArray = map.toArray(new Molecule[map.size()]);
-		System.out.println(map.size() + "  " + molArray.length);
 		connMatrix = new DenseDoubleMatrix2D(molArray.length, molArray.length);
 		MCSMatrix = new DenseObjectMatrix2D(molArray.length, molArray.length);
 
@@ -69,7 +68,7 @@ public class AdjMatrix {
 	private void init(TreeSet<Molecule> map) throws Exception {
 		Molecule[] arr = map.toArray(new Molecule[map.size()]);
 		for (int i = 0; i < arr.length; ++i) {
-
+			System.out.print("\r " + i + " out of " + arr.length + " molecules");
 			for (int j = i+1; j < arr.length; ++j) {
 				Molecule mol1 = arr[i];
 				Molecule mol2 = arr[j];
@@ -83,7 +82,6 @@ public class AdjMatrix {
 				SMSDpair mcsp = new SMSDpair(mol1.getMol(), mol2.getMol());
 				IAtomContainer[] pair = mcsp.pairDiff();
 				if (pair == null) continue;
-				System.out.println("YAPA");
 
 				if (ConnectivityChecker.isConnected(pair[0]) && 
 						ConnectivityChecker.isConnected(pair[1])) {
@@ -93,7 +91,8 @@ public class AdjMatrix {
 					MCSMatrix.set(j, i, mcsp);
 				}
 			}						
-		}	
+		}
+		System.out.println();
 	}
 	//returns a sorted array of CC matrices
 	/**

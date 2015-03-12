@@ -26,17 +26,33 @@ public class TestPairs {
 	 * @throws Exception 
 	 */
 	public static void main(String[] args) throws Exception {
-		double norm = 100;		// this is the min inactive value - can be added via an command argument
+		if (args.length == 1) {
+			SDFreader sdf = new SDFreader(args[0]);
+			System.out.println("#Field\t|  ");
+			for (int i = 0; i < sdf.fieldStr().length; ++i) {
+				System.out.println((i + 1) + "\t|  " + sdf.fieldStr()[i]);
+			}
+			System.exit(0);
+		}
+		
+		if (args.length < 3 || args.length > 4) {
+			System.out.println("Usage : MPairs arg1 arg2 arg3 arg4\narg1 input.sdf\n" +
+		        "arg2 output.sdf\n" + "arg3 number of field of interest in input.sdf\n" +
+				"arg4 optional - minimum inactive value, default = 100\n\n  or \n" +
+		        "MPairs arg1 for a list of fields of arg1 with Nos\n");
+			System.exit(0);
+		}
 		String infile = args[0];
 		String outfile = args[1];
 		Integer ind = Integer.parseInt(args[2]) - 1;
+		double norm = args.length == 3 ? 100 : Double.parseDouble(args[3]);
 
 		SDFreader sdf = new SDFreader(infile);
 		TreeSet<Molecule> map = new TreeSet<>();
 		int cnt = 0;
 		String mainProp = sdf.fieldStr()[ind];
 		for (IAtomContainer mol : sdf.sdfMap().keySet()) {
-			String val = sdf.sdfMap().get(mol)[0]; 	// index of field is 0
+			String val = sdf.sdfMap().get(mol)[ind]; 	// index of field is 0
 			if (val == null || mol.getAtomCount() == 0) {
 				continue;
 			}
@@ -47,7 +63,7 @@ public class TestPairs {
 			Molecule molec = new Molecule(mol, Double.parseDouble(val), mainProp);
 			map.add(molec);
 			++cnt;
-			if (cnt == 20) break;
+			//if (cnt == 20) break;
 		}
 		AdjMatrix adm = new AdjMatrix(map);
 		IAtomContainerSet toWriteSet = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainerSet.class);
@@ -71,7 +87,9 @@ public class TestPairs {
 						IAtomContainer targetBit;
 						queryBit = pair.pairDiff()[0];
 						targetBit = pair.pairDiff()[1];
-						targetBit.setProperty("dlnX", DeltaP.logDiff(queryPot, queryPot, norm));
+						double dlnX = (DeltaP.logDiff(queryPot, targetPot, norm) == Double.MIN_VALUE ?
+								0 : DeltaP.logDiff(queryPot, targetPot, norm));
+						targetBit.setProperty("dlnX", dlnX);
 						queryBit.setProperty("Cluster No", k + 1);
 						targetBit.setProperty("Cluster No", k + 1);
 						toWriteSet.addAtomContainer(query);
