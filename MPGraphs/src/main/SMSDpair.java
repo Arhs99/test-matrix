@@ -12,6 +12,7 @@ import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.smiles.SmilesGenerator;
 import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.smsd.Isomorphism;
 import org.openscience.smsd.interfaces.Algorithm;
@@ -27,6 +28,7 @@ public final class SMSDpair{
 	private final Isomorphism smsd;
 	private Collection<Integer> queryHL;
 	private Collection<Integer> targetHL;
+	private SmilesGenerator sg = SmilesGenerator.absolute().aromatic(); 
 	
 	public SMSDpair(IAtomContainer mol1, IAtomContainer mol2) throws CDKException, CloneNotSupportedException {
 
@@ -68,6 +70,25 @@ public final class SMSDpair{
 		//return smsd.getTarget();
 		return target;
 	}
+	
+	/**
+	 * @return SMILES absolute representation of query fragment
+	 * @throws CDKException
+	 * @throws Exception
+	 */
+	public String queryFrag() throws CDKException, Exception {
+		return sg.create(this.pairDiff()[0]);
+	}
+	
+	/**
+	 * @return SMILES absolute representation of target fragment
+	 * @throws CDKException
+	 * @throws Exception
+	 */
+	public String targetFrag() throws CDKException, Exception {
+		return sg.create(this.pairDiff()[1]);
+	}
+	
 	public IAtomContainer[] pairDiff() throws CloneNotSupportedException, Exception {		// 0 query, 1 target
 
 		IAtomContainer[] pair = new IAtomContainer[2];
@@ -126,6 +147,9 @@ public final class SMSDpair{
 		return targetHL;
 	}
 	
+	public Isomorphism getSMSD() {
+		return smsd;
+	}
 	public static void main(String[] args) throws Exception {
 
 		SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());

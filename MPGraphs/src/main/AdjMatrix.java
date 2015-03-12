@@ -6,6 +6,7 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -31,6 +32,9 @@ import viewer.SideDisplay;
 import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.impl.DenseObjectMatrix2D;
+import javax.swing.JMenuBar;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
 
 
 public class AdjMatrix {
@@ -200,6 +204,7 @@ public class AdjMatrix {
 	    }
 		
 	}
+	
 
 	/**
 	 * @param args
@@ -213,7 +218,7 @@ public class AdjMatrix {
 		int cnt = 0;
 		for (IAtomContainer mol : sdf.sdfMap().keySet()) {
 			String s = "Rfms Ic50 Um Hpad4 Avg";
-			String val = sdf.sdfMap().get(mol)[0]; 	// index of field is 0
+			String val = sdf.sdfMap().get(mol)[1]; 	// index of field is 0
 			if (val == null || mol.getAtomCount() == 0) {
 				continue;
 			}
@@ -224,7 +229,7 @@ public class AdjMatrix {
 			Molecule molec = new Molecule(mol, Double.parseDouble(val), s);
 			map.add(molec);
 			++cnt;
-			if (cnt == 20) break;
+			if (cnt == 10) break;
 		}
 
 		final AdjMatrix adm = new AdjMatrix(map);
@@ -271,6 +276,45 @@ public class AdjMatrix {
 				disp.add(comboBox);
 				comboBox.setModel(new DefaultComboBoxModel(comboDesc));
 				f.getContentPane().add(disp, BorderLayout.EAST);
+				
+				JMenuBar menuBar = new JMenuBar();
+				f.setJMenuBar(menuBar);
+				
+				final JFileChooser fc = new JFileChooser();
+				
+				JMenu mnFile = new JMenu("File");
+				menuBar.add(mnFile);
+				
+				JMenuItem mntmImportSdf = new JMenuItem("Import sdf");
+				mntmImportSdf.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						int returnVal = fc.showOpenDialog(f);
+
+				        if (returnVal == JFileChooser.APPROVE_OPTION) {
+				            File file = fc.getSelectedFile();
+				            //This is where a real application would open the file.
+				            System.out.println("Opening: " + file.getName() + ".");
+				        } else {
+				        	System.out.println("Open command cancelled by user.");
+				        }
+					}
+				});
+				mnFile.add(mntmImportSdf);
+				
+				JMenuItem mntmExportSdf = new JMenuItem("Export sdf");
+				mntmExportSdf.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						int returnVal = fc.showSaveDialog(f);
+						 if (returnVal == JFileChooser.APPROVE_OPTION) {
+					            File file = fc.getSelectedFile();
+					            //This is where a real application would open the file.
+					            System.out.println("Saving: " + file.getName() + ".");
+					        } else {
+					        	System.out.println("Save command cancelled by user.");
+					        }
+						}
+				});
+				mnFile.add(mntmExportSdf);
 				f.pack();
 				f.setVisible(true);
 			}
