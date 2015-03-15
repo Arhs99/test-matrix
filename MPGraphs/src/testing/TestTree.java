@@ -68,7 +68,7 @@ public class TestTree extends JPanel {
 	private Map<Integer,Icon> iconMap;
 	
 	public TestTree(ArrayList<SMSDpair> arr, double norm) throws Exception {
-		//Graph<Integer, Integer> base =	new DirectedSparseMultigraph<Integer,Integer>();
+		//Graph<Integer, Integer> base =	new DirectedSparseMultigraph<Integer,Integer>();//
 		graph = new DelegateTree<Integer, Integer>();
 		iconMap = new TreeMap<>();		// use a tree to keep stored molecules sorted
 		createTree(arr, norm);
@@ -159,7 +159,7 @@ public class TestTree extends JPanel {
 	        Container content = frame.getContentPane();
 	        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	        System.out.println(arr.size());
-	        content.add(new TestTree(arr, 100.0));
+	        content.add(new TestTree(arr, 100.0)); // will change to (adm, molIndex, 100)
 	        frame.pack();
 	        frame.setVisible(true);
 			}
