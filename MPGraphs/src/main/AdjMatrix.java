@@ -75,15 +75,18 @@ public class AdjMatrix {
 			System.out.print("\r " + i + " out of " + arr.length + " molecules");
 			for (int j = i+1; j < arr.length; ++j) {
 				Molecule mol1 = arr[i];
+				IAtomContainer ac1 = mol1.getMol();
+				ac1.setProperty(mol1.getFieldName(), mol1.getPotency());
 				Molecule mol2 = arr[j];
+				IAtomContainer ac2 = mol2.getMol();
+				ac2.setProperty(mol2.getFieldName(), mol2.getPotency());
 				double diff = DeltaP.logDiff(mol1.getPotency(), mol2.getPotency(), 100);
-
 				IFingerprinter fg = new Fingerprinter();
-				IBitFingerprint fingerprint1 = fg.getBitFingerprint(mol1.getMol());
-				IBitFingerprint fingerprint2 = fg.getBitFingerprint(mol2.getMol());
+				IBitFingerprint fingerprint1 = fg.getBitFingerprint(ac1);
+				IBitFingerprint fingerprint2 = fg.getBitFingerprint(ac2);
 				double tanimoto = Tanimoto.calculate(fingerprint1, fingerprint2);
 				if (tanimoto < TANI_THRES) continue;
-				SMSDpair mcsp = new SMSDpair(mol1.getMol(), mol2.getMol());
+				SMSDpair mcsp = new SMSDpair(ac1, ac2);
 				IAtomContainer[] pair = mcsp.pairDiff();
 				if (pair == null) continue;
 
@@ -229,7 +232,7 @@ public class AdjMatrix {
 			Molecule molec = new Molecule(mol, Double.parseDouble(val), s);
 			map.add(molec);
 			++cnt;
-			if (cnt == 10) break;
+			//if (cnt == 10) break;
 		}
 
 		final AdjMatrix adm = new AdjMatrix(map);

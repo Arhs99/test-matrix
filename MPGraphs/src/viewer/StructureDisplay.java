@@ -1,15 +1,18 @@
 package viewer;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+import javax.swing.Icon;
 import javax.swing.JPanel;
 
 import org.openscience.cdk.AtomContainer;
@@ -17,6 +20,7 @@ import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.renderer.AtomContainerRenderer;
+import org.openscience.cdk.renderer.BoundsCalculator;
 import org.openscience.cdk.renderer.RendererModel;
 import org.openscience.cdk.renderer.SymbolVisibility;
 import org.openscience.cdk.renderer.color.UniColor;
@@ -40,6 +44,7 @@ public class StructureDisplay extends JPanel{
 	private IAtomContainer mol;
 	private Rectangle drawArea;
 	private AtomContainerRenderer renderer;
+	private boolean isNewMol = true;
 	public StructureDisplay() throws Exception {
 		IAtomContainer mol1 = new AtomContainer();
 		this.mol = mol1;
@@ -114,6 +119,33 @@ public class StructureDisplay extends JPanel{
 		repaint();
 	}
 	
+	public void highlightFlatSelect(Collection<Integer> set, Color col) {
+		RendererModel rm = renderer.getRenderer2DModel();
+		rm.set(StandardGenerator.Highlighting.class,
+                StandardGenerator.HighlightStyle.Colored);
+		rm.set(StandardGenerator.OuterGlowWidth.class,
+                3d);
+		HashSet<IAtom> atomSet = new HashSet<IAtom>();
+		
+		for (int i : set) {
+			atomSet.add(mol.getAtom(i));
+		}
+		
+		for (IAtom atom : atomSet) {
+			atom.setProperty(StandardGenerator.HIGHLIGHT_COLOR, col);
+		}
+		
+		for (IBond bond : mol.bonds()) {
+			IAtom a = bond.getAtom(0);
+			IAtom b = bond.getAtom(1);
+			if (atomSet.contains(a) && atomSet.contains(b)) {
+				bond.setProperty(StandardGenerator.HIGHLIGHT_COLOR, col);
+			}
+		}
+		
+		repaint();
+	}
+	
 	public void setMol(IAtomContainer mol) throws Exception {
 		this.mol = mol.clone();
 		drawMol();
@@ -129,6 +161,36 @@ public class StructureDisplay extends JPanel{
 	public AtomContainerRenderer getRenderer() {
 		return renderer;
 	}
+	
+	public Icon getIcon(int w, int h, Collection<Integer> highL, double pot, Color col) {
+		final int width = w;
+		final int height = h;
+		if (highL != null) {
+			this.highlightFlatSelect(highL, col);
+		}
+		return new Icon() {
+			@Override
+			public void paintIcon(Component c, Graphics g, int x, int y) {
+				Rectangle drawingArea = new Rectangle(x, y, width - 20, height - 20);
+				g.setColor(Color.lightGray);
+				g.fillRect(x, y, width, height);
+				AWTDrawVisitor visitor = new AWTDrawVisitor((Graphics2D) g);
+				renderer.paint(mol, visitor, drawingArea, true);
+			}
+
+			@Override
+			public int getIconWidth() {
+				return width;
+			}
+
+			@Override
+			public int getIconHeight() {
+				return height;
+			}
+			
+		};
+	}
+	
 	public void paintComponent(Graphics g) {
 		this.setBackground(Color.white);
 		g.fillRect(0, 0, W, H);
