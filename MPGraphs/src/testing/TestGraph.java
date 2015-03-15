@@ -61,7 +61,7 @@ public class TestGraph {
 		int cnt = 0;
 		for (IAtomContainer mol : sdf.sdfMap().keySet()) {
 			String s = "Rfms Ic50 Um Hpad4 Avg";
-			String val = sdf.sdfMap().get(mol)[0]; 	// index of field is 0
+			String val = sdf.sdfMap().get(mol)[1]; 	// index of field is 0
 			if (val == null || mol.getAtomCount() == 0) {
 				continue;
 			}
@@ -72,7 +72,7 @@ public class TestGraph {
 			Molecule molec = new Molecule(mol, Double.parseDouble(val), s);
 			map.add(molec);
 			++cnt;
-			if (cnt == 80) break;
+			if (cnt == 20) break;
 		}
 
 
