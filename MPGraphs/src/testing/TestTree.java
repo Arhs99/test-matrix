@@ -1,13 +1,15 @@
 package testing;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.geom.Point2D;
+import java.awt.Paint;
+import java.awt.Stroke;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.TreeSet;
 
 import javax.swing.Icon;
@@ -15,40 +17,24 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import main.AdjMatrix;
-import main.DeltaP;
-import main.Gradient;
 import main.Molecule;
 import main.SDFreader;
 import main.SMSDpair;
 
 import org.apache.commons.collections15.Factory;
+import org.apache.commons.collections15.Transformer;
 import org.apache.commons.collections15.functors.ConstantTransformer;
 import org.openscience.cdk.interfaces.IAtomContainer;
-import org.openscience.cdk.layout.StructureDiagramGenerator;
 import org.openscience.smsd.tools.ExtAtomContainerManipulator;
 
 import viewer.StructureDisplay;
-
-import edu.uci.ics.jung.algorithms.layout.PolarPoint;
-import edu.uci.ics.jung.algorithms.layout.RadialTreeLayout;
-import edu.uci.ics.jung.algorithms.layout.TreeLayout;
 import edu.uci.ics.jung.graph.DelegateTree;
-import edu.uci.ics.jung.graph.DirectedSparseMultigraph;
-import edu.uci.ics.jung.graph.Forest;
-import edu.uci.ics.jung.graph.Graph;
-import edu.uci.ics.jung.graph.Tree;
-import edu.uci.ics.jung.graph.UndirectedSparseGraph;
-import edu.uci.ics.jung.samples.RadialTreeLensDemo;
-import edu.uci.ics.jung.samples.TreeCollapseDemo;
-import edu.uci.ics.jung.samples.VertexImageShaperDemo.DemoVertexIconShapeTransformer;
-import edu.uci.ics.jung.samples.VertexImageShaperDemo.DemoVertexIconTransformer;
-import edu.uci.ics.jung.visualization.GraphZoomScrollPane;
+import edu.uci.ics.jung.samples.ShortestPathDemo.MyEdgeStrokeFunction;
+import edu.uci.ics.jung.visualization.RenderContext;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 import edu.uci.ics.jung.visualization.control.DefaultModalGraphMouse;
 import edu.uci.ics.jung.visualization.decorators.DefaultVertexIconTransformer;
 import edu.uci.ics.jung.visualization.decorators.EdgeShape;
-import edu.uci.ics.jung.visualization.decorators.EllipseVertexShapeTransformer;
-import edu.uci.ics.jung.visualization.decorators.VertexIconShapeTransformer;
 
 @SuppressWarnings("serial")
 public class TestTree extends JPanel {
@@ -61,55 +47,118 @@ public class TestTree extends JPanel {
 		
 	private DelegateTree<Integer, Integer> graph;
 	private VisualizationViewer<Integer, Integer> vv;
-	private static final int ICON_WIDTH = 200;
-	private static final int ICON_HEIGHT = 200;
+	private static final int ICON_WIDTH = 220;
+	private static final int ICON_HEIGHT = 220;
 	//private TreeLayout<Integer, Integer> layout;
 	private ModRadialTreeLayout<Integer,Integer> radialLayout;
 	private Map<Integer,Icon> iconMap;
+	private Map<Integer, Double> edgeMap;
+	private AdjMatrix adm;
+	private int molIndex;
+	private double norm;
 	
-	public TestTree(ArrayList<SMSDpair> arr, double norm) throws Exception {
-		//Graph<Integer, Integer> base =	new DirectedSparseMultigraph<Integer,Integer>();//
+	public TestTree(AdjMatrix adm, int molIndex, double norm) throws Exception {
+		this.adm = adm;
+		this.norm = norm;
+		this.molIndex = molIndex;
 		graph = new DelegateTree<Integer, Integer>();
-		iconMap = new TreeMap<>();		// use a tree to keep stored molecules sorted
-		createTree(arr, norm);
-		radialLayout = new ModRadialTreeLayout<Integer,Integer>(graph, 220, 220);//, 900, 900);
-        radialLayout.setSize(new Dimension(1000,1200));
-        vv =  new VisualizationViewer<Integer,Integer>(radialLayout, new Dimension(1000,1200));
+		iconMap = new HashMap<>();
+		edgeMap = new HashMap<>();
+		createTree();
+		radialLayout = new ModRadialTreeLayout<Integer,Integer>(graph, 250, 250);//, 900, 900);
+        radialLayout.setSize(new Dimension(1200, 1000));
+        vv =  new VisualizationViewer<Integer,Integer>(radialLayout, new Dimension(1200, 1000));
         vv.setBackground(Color.white);
         vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.QuadCurve<Integer, Integer>());
-        vv.getRenderContext().setArrowFillPaintTransformer(new ConstantTransformer(Color.lightGray));
+        vv.getRenderContext().setEdgeDrawPaintTransformer(new EdgeColor());
+        vv.getRenderContext().setEdgeStrokeTransformer(new EdgeStrokeFunc());
+        
         final DefaultVertexIconTransformer<Integer> vertexIconTransformer =
             	new DefaultVertexIconTransformer<Integer>();
         vertexIconTransformer.setIconMap(iconMap);
         vv.getRenderContext().setVertexIconTransformer(vertexIconTransformer);        
         this.add(vv);
-        //final GraphZoomScrollPane panel = new GraphZoomScrollPane(vv);
-        //this.add(panel);
         
         final DefaultModalGraphMouse graphMouse = new DefaultModalGraphMouse();
         vv.setGraphMouse(graphMouse);
 	}
-	private void createTree(ArrayList<SMSDpair> arr, double norm) throws Exception {
-		int numAdj = arr.size() - 1;
-		System.out.println(arr.size());
-		IAtomContainer rootMol = arr.get(0).rxnmol();
-		StructureDisplay sd = new StructureDisplay(rootMol);
-		iconMap.put(0, sd.getIcon(ICON_WIDTH, ICON_HEIGHT, null, 0.0, null));
-		graph.setRoot(0);
-		Color col;
-		for (int i = 0; i < numAdj; ++i) {
-			IAtomContainer mol = arr.get(i).prdmol();
-			sd = new StructureDisplay(mol);
-//			double diff = DeltaP.logDiff(arr.get(i)., arr.get(i).prdmol(), norm);
-//			if ( > 0.05) {
-//				col = Color.GREEN;
-//			} else if (pot < -0.05) {
-//				
-//			}
-			iconMap.put(i + 1, sd.getIcon(ICON_WIDTH, ICON_HEIGHT, arr.get(i).targetHi(), 0.0, Color.red));
-			graph.addEdge(edgeFactory.create(), 0, i + 1);
+	
+	public void setMolIndex(int molIndex) throws Exception {
+		this.molIndex = molIndex;
+		createTree();
+		radialLayout = new ModRadialTreeLayout<Integer,Integer>(graph, 250, 250);
+		vv.setGraphLayout(radialLayout);
+		vv.repaint();
+	}
+	
+	
+	private class EdgeColor implements Transformer<Integer,Paint> {
+		public Paint transform(Integer i) {
+			double dP = edgeMap.get(i);
+			Color col;
+			if (dP > 1) {
+				col = Color.green;
+			} else if (dP < -1) {
+				col = Color.red;
+			} else {
+				col = Color.gray;
+			}
+			return col;
+		}
+	}
+
+	private class EdgeStrokeFunc implements Transformer<Integer,Stroke> {
+		protected final Stroke zero = new BasicStroke(1);
+		protected final Stroke basic = new BasicStroke(3);
+		protected final Stroke heavy = new BasicStroke(5);
+		//protected final Stroke dotted = RenderContext.DOTTED;
+
+		public Stroke transform(Integer i) {
+			double dP = Math.abs(edgeMap.get(i));
+			Stroke st;
+			if (dP == 0) {
+				st = zero;
+			} else if (dP > 300) {
+				st = heavy;
+			} else {
+				st = basic;
+			}
+			return st;
 		}
 
+	}
+	
+	private void createTree() throws Exception {
+		Molecule rootMol = adm.getMolArray()[molIndex];
+		StructureDisplay sd = new StructureDisplay(rootMol.getMol());
+		String fieldStr = rootMol.getFieldName();
+		iconMap.put(0, sd.getIcon(ICON_WIDTH, ICON_HEIGHT, null,
+				rootMol.getPotency(), null, fieldStr));
+		graph.setRoot(0);
+		
+		int childNum = 1;
+		for (int i = 0; i < adm.getMCSMatrix().toArray()[molIndex].length; ++i) {
+			if (adm.getMCSMatrix().getQuick(i, molIndex) != null) {
+				SMSDpair pair = (SMSDpair) adm.getMCSMatrix().getQuick(i, molIndex);
+				Molecule mol = adm.getMolArray()[i];
+				sd = new StructureDisplay(mol.getMol());
+				double dP = adm.getConnMatrix().getQuick(i, molIndex);
+				Color col;
+				if (dP > 1) {
+					col = Color.green;
+				} else if (dP < -1) {
+					col = Color.red;
+				} else {
+					col = Color.blue;
+				}
+				Collection<Integer> highL = i > molIndex ? pair.targetHi() : pair.queryHi();
+				iconMap.put(childNum, sd.getIcon(ICON_WIDTH, ICON_HEIGHT,
+						highL, mol.getPotency(), col, fieldStr));
+				graph.addEdge(edgeFactory.create(), 0, childNum);	
+				edgeMap.put(childNum - 1, dP);		// edge numbering has to start from 0
+				++childNum;
+			}
+		}
 	}
 	
 	   public static void main(String[] args) throws Exception {
@@ -142,24 +191,29 @@ public class TestTree extends JPanel {
 			}
 			AdjMatrix adm = new AdjMatrix(map);
 			
-			int molIndex = 5;
-			
+			int molIndex = 0;
+			int j = 0;
+			int max = 0;
 			ArrayList<SMSDpair> arr = new ArrayList<>();
-			while (true) {
-			Object[] smsdArr = adm.getMCSMatrix().toArray()[molIndex];
+			while (j < adm.getMCSMatrix().toArray().length) {
+			Object[] smsdArr = adm.getMCSMatrix().toArray()[j];
 			for (Object pair : smsdArr) {
 				if (pair != null) {
 					arr.add((SMSDpair) pair);
 				}
 			}
-			if (arr.size() > 1) break;
-			++molIndex;
+			if (arr.size() > max){
+				max = arr.size();
+				molIndex = j;
 			}
+			++j;
+			}
+			
+			
 		   JFrame frame = new JFrame();
 	        Container content = frame.getContentPane();
 	        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	        System.out.println(arr.size());
-	        content.add(new TestTree(arr, 100.0)); // will change to (adm, molIndex, 100)
+	        content.add(new TestTree(adm, molIndex, 100));
 	        frame.pack();
 	        frame.setVisible(true);
 			}

@@ -3,6 +3,7 @@ package viewer;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
@@ -14,6 +15,8 @@ import java.util.List;
 
 import javax.swing.Icon;
 import javax.swing.JPanel;
+import javax.swing.JToolTip;
+import javax.swing.SwingUtilities;
 
 import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.interfaces.IAtom;
@@ -162,7 +165,8 @@ public class StructureDisplay extends JPanel{
 		return renderer;
 	}
 	
-	public Icon getIcon(int w, int h, Collection<Integer> highL, double pot, Color col) {
+	public Icon getIcon(int w, int h, Collection<Integer> highL, final double pot,
+			Color col, final String fieldStr) {
 		final int width = w;
 		final int height = h;
 		if (highL != null) {
@@ -171,9 +175,16 @@ public class StructureDisplay extends JPanel{
 		return new Icon() {
 			@Override
 			public void paintIcon(Component c, Graphics g, int x, int y) {
-				Rectangle drawingArea = new Rectangle(x, y, width - 20, height - 20);
-				g.setColor(Color.lightGray);
-				g.fillRect(x, y, width, height);
+				g.setColor(Color.cyan);
+				g.fillOval(x - 10, y - 10, width - 20, height - 20);
+				FontMetrics metrics = c.getFontMetrics(g.getFont());
+				String text = fieldStr + " : " + pot;
+				int textW = SwingUtilities.computeStringWidth(metrics, text);
+				int textH = metrics.getHeight();
+				g.setColor(Color.BLACK);
+				g.drawString(text, x + Math.max(5, (width - textW)/2), y + height - textH);
+				
+				Rectangle drawingArea = new Rectangle(x, y, width - 5, height - 6 - textH);
 				AWTDrawVisitor visitor = new AWTDrawVisitor((Graphics2D) g);
 				renderer.paint(mol, visitor, drawingArea, true);
 			}

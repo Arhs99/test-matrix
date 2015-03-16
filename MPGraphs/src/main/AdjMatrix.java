@@ -72,7 +72,7 @@ public class AdjMatrix {
 	private void init(TreeSet<Molecule> map) throws Exception {
 		Molecule[] arr = map.toArray(new Molecule[map.size()]);
 		for (int i = 0; i < arr.length; ++i) {
-			System.out.print("\r " + i + " out of " + arr.length + " molecules");
+			System.out.print("\r " + (i + 1) + " out of " + arr.length + " molecules");
 			for (int j = i+1; j < arr.length; ++j) {
 				Molecule mol1 = arr[i];
 				IAtomContainer ac1 = mol1.getMol();
