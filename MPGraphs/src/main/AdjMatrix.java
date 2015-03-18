@@ -4,12 +4,16 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Set;
 import java.util.TreeSet;
 
 import javax.swing.DefaultComboBoxModel;
@@ -27,6 +31,7 @@ import org.openscience.cdk.similarity.Tanimoto;
 import org.openscience.smsd.tools.ExtAtomContainerManipulator;
 
 import viewer.HeatMap;
+import viewer.PairsTree;
 import viewer.SideDisplay;
 
 import cern.colt.matrix.DoubleMatrix2D;
@@ -35,6 +40,10 @@ import cern.colt.matrix.impl.DenseObjectMatrix2D;
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.event.MouseInputAdapter;
+
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeEvent;
 
 
 public class AdjMatrix {
@@ -44,7 +53,7 @@ public class AdjMatrix {
 	private static final double TANI_THRES = 0.60;
 	private CComp cc;
 
-	public AdjMatrix(TreeSet<Molecule> map) {		
+	public AdjMatrix(Set<Molecule> map) {		
 		molArray = map.toArray(new Molecule[map.size()]);
 		connMatrix = new DenseDoubleMatrix2D(molArray.length, molArray.length);
 		MCSMatrix = new DenseObjectMatrix2D(molArray.length, molArray.length);
@@ -69,10 +78,10 @@ public class AdjMatrix {
 		return MCSMatrix;
 	}
 
-	private void init(TreeSet<Molecule> map) throws Exception {
+	private void init(Set<Molecule> map) throws Exception {
 		Molecule[] arr = map.toArray(new Molecule[map.size()]);
 		for (int i = 0; i < arr.length; ++i) {
-			System.out.print("\r " + i + " out of " + arr.length + " molecules");
+			System.out.print("\r " + (i + 1) + " out of " + arr.length + " molecules");
 			for (int j = i+1; j < arr.length; ++j) {
 				Molecule mol1 = arr[i];
 				IAtomContainer ac1 = mol1.getMol();
@@ -232,12 +241,13 @@ public class AdjMatrix {
 			Molecule molec = new Molecule(mol, Double.parseDouble(val), s);
 			map.add(molec);
 			++cnt;
-			//if (cnt == 10) break;
+			if (cnt == 10) break;
 		}
 
 		final AdjMatrix adm = new AdjMatrix(map);
 		final SideDisplay disp = new SideDisplay();
 		final HeatMap heat = new HeatMap(adm, true, disp, Gradient.GRADIENT_RED_TO_GREEN);
+		
 		int CCcount = adm.getCCDoubleMatr().length;
 		final String comboDesc[] = new String[CCcount + 1];
 		comboDesc[0] = "Show all";
@@ -248,76 +258,121 @@ public class AdjMatrix {
 		//PrintStream out = new PrintStream(new FileOutputStream("output.txt"));
 		//System.setOut(out);
 		//System.out.println(adm.getCCDoubleMatr()[0]);
+		final JFrame f = new JFrame("Heatmap");
+		heat.setToolTipText("");
+		final PairsTree ptree = new PairsTree(adm, 0, 100);
+		final JPanel extra = new JPanel();
+		
+		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		f.getContentPane().setLayout(new BorderLayout());
+		
+						
+		f.getContentPane().add(extra, BorderLayout.WEST);
+		extra.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+		extra.setSize(new Dimension(1000, 1000));
+		extra.add(heat);
+	
+		JComboBox comboBox = new JComboBox();
+		comboBox.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				JComboBox cb = (JComboBox)e.getSource();
+				int ind = cb.getSelectedIndex();
+				heat.updateMap(ind);
+				f.validate();
+			}
+		});
+		comboBox.setAlignmentY(Component.TOP_ALIGNMENT);
+		disp.add(comboBox);
+		comboBox.setModel(new DefaultComboBoxModel(comboDesc));
+		f.getContentPane().add(disp, BorderLayout.EAST);
+		
+		
+		ptree.getVViewer().addMouseListener(new MouseInputAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				extra.remove(ptree);
+				extra.add(heat);
+				disp.setVisible(true);
+				extra.validate();
+			}
+		});
 
-
-
+		heat.addMouseListener(new MouseInputAdapter() {
+			private int dataX(Point p) {
+				Dimension d = heat.getSize();
+				int w = d.width - 61;	// remove borders
+				double scaleX = w * 1.0 / (heat.getData().length + 1.0);
+				return (int) Math.floor((p.getX() - 31.0) / scaleX);
+			}
+			
+			private int dataY(Point p) {
+				Dimension d = heat.getSize();
+				int h = d.height - 61;
+				double scaleY = h * 1.0 / (heat.getData().length + 1.0);
+				return (int) Math.floor((p.getY() - 31.0) / scaleY);
+			}
+			
+			public void mouseClicked(MouseEvent e) {
+				Point p = e.getPoint();
+				int mouseX = dataX(p);
+				int mouseY = dataY(p);
+				if (mouseY > 0 && mouseY <= heat.getData().length) {
+					try {
+						ptree.setMolIndex(mouseY - 1);
+						extra.remove(heat);
+						disp.setVisible(false);
+						extra.add(ptree);
+						f.validate();
+						
+					} catch (Exception e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+				}
+			}
+		});
+		
 		javax.swing.SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				
-				final JFrame f = new JFrame("Heatmap");
-				final JPanel extra = new JPanel();
-
-				f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-				f.getContentPane().setLayout(new BorderLayout());
-				heat.setToolTipText("");
-				f.getContentPane().add(extra, BorderLayout.WEST);
-				extra.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
-				extra.setSize(new Dimension(1000, 1000));
-				extra.add(heat);
-				
-				
-				JComboBox comboBox = new JComboBox();
-				comboBox.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						JComboBox cb = (JComboBox)e.getSource();
-						int ind = cb.getSelectedIndex();
-						heat.updateMap(ind);
-						f.validate();
-					}
-				});
-				comboBox.setAlignmentY(Component.TOP_ALIGNMENT);
-				disp.add(comboBox);
-				comboBox.setModel(new DefaultComboBoxModel(comboDesc));
-				f.getContentPane().add(disp, BorderLayout.EAST);
-				
-				JMenuBar menuBar = new JMenuBar();
-				f.setJMenuBar(menuBar);
-				
-				final JFileChooser fc = new JFileChooser();
-				
-				JMenu mnFile = new JMenu("File");
-				menuBar.add(mnFile);
-				
-				JMenuItem mntmImportSdf = new JMenuItem("Import sdf");
-				mntmImportSdf.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						int returnVal = fc.showOpenDialog(f);
-
-				        if (returnVal == JFileChooser.APPROVE_OPTION) {
-				            File file = fc.getSelectedFile();
-				            //This is where a real application would open the file.
-				            System.out.println("Opening: " + file.getName() + ".");
-				        } else {
-				        	System.out.println("Open command cancelled by user.");
-				        }
-					}
-				});
-				mnFile.add(mntmImportSdf);
-				
-				JMenuItem mntmExportSdf = new JMenuItem("Export sdf");
-				mntmExportSdf.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						int returnVal = fc.showSaveDialog(f);
-						 if (returnVal == JFileChooser.APPROVE_OPTION) {
-					            File file = fc.getSelectedFile();
-					            //This is where a real application would open the file.
-					            System.out.println("Saving: " + file.getName() + ".");
-					        } else {
-					        	System.out.println("Save command cancelled by user.");
-					        }
-						}
-				});
-				mnFile.add(mntmExportSdf);
+//				JMenuBar menuBar = new JMenuBar();
+//				f.setJMenuBar(menuBar);
+//				
+//				final JFileChooser fc = new JFileChooser();
+//				
+//				JMenu mnFile = new JMenu("File");
+//				menuBar.add(mnFile);
+//				
+//				
+//				JMenuItem mntmImportSdf = new JMenuItem("Import sdf");
+//				mntmImportSdf.addActionListener(new ActionListener() {
+//					public void actionPerformed(ActionEvent e) {
+//						int returnVal = fc.showOpenDialog(f);
+//
+//				        if (returnVal == JFileChooser.APPROVE_OPTION) {
+//				            File file = fc.getSelectedFile();
+//				            //This is where a real application would open the file.
+//				            System.out.println("Opening: " + file.getName() + ".");
+//				        } else {
+//				        	System.out.println("Open command cancelled by user.");
+//				        }
+//					}
+//				});
+//				mnFile.add(mntmImportSdf);
+//				
+//				JMenuItem mntmExportSdf = new JMenuItem("Export sdf");
+//				mntmExportSdf.addActionListener(new ActionListener() {
+//					public void actionPerformed(ActionEvent e) {
+//						int returnVal = fc.showSaveDialog(f);
+//						 if (returnVal == JFileChooser.APPROVE_OPTION) {
+//					            File file = fc.getSelectedFile();
+//					            //This is where a real application would open the file.
+//					            System.out.println("Saving: " + file.getName() + ".");
+//					        } else {
+//					        	System.out.println("Save command cancelled by user.");
+//					        }
+//						}
+//				});
+//				mnFile.add(mntmExportSdf);
 				f.pack();
 				f.setVisible(true);
 			}

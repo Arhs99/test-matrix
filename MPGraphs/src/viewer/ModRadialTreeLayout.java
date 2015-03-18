@@ -1,4 +1,4 @@
-package testing;
+package viewer;
 
 import java.awt.Dimension;
 import java.awt.geom.Point2D;
@@ -107,7 +107,7 @@ public class ModRadialTreeLayout<V,E> extends TreeLayout<V,E> {
 		maxx = Math.max(maxx, size.width);
 		double theta = 2*Math.PI/maxx;
 
-		double deltaRadius = size.width/1.4/maxy;
+		double deltaRadius = size.width/2/maxy;
 		for(Map.Entry<V, Point2D> entry : locations.entrySet()) {
 			V v = entry.getKey();
 			Point2D p = entry.getValue();
