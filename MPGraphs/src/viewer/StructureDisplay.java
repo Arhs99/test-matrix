@@ -175,8 +175,10 @@ public class StructureDisplay extends JPanel{
 		return new Icon() {
 			@Override
 			public void paintIcon(Component c, Graphics g, int x, int y) {
-				g.setColor(Color.cyan);
-				g.fillOval(x - 10, y - 10, width - 20, height - 20);
+				g.setColor(Color.white);
+				g.fillRoundRect(x, y, width, height, 30, 30);
+				g.setColor(Color.black);
+				g.drawRoundRect(x, y, width, height, 30, 30);
 				FontMetrics metrics = c.getFontMetrics(g.getFont());
 				String text = fieldStr + " : " + pot;
 				int textW = SwingUtilities.computeStringWidth(metrics, text);

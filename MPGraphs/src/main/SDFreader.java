@@ -1,5 +1,6 @@
 package main;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.HashMap;
@@ -21,11 +22,21 @@ import org.openscience.cdk.io.iterator.IteratingSDFReader;
 
 
 public class SDFreader {
+	private FileReader in;
 	private Queue<String> fields;
 	private String[] fieldStr;
 	private Map<IAtomContainer,String[]> sdfMap;
+	
+	public SDFreader(File file) throws Exception {
+		in = new FileReader(file);
+		init();
+	}
+	
 	public SDFreader(String file) throws Exception {
-		FileReader in = new FileReader(file);
+		in = new FileReader(file);
+		init();
+	}
+	private void init() {
 		IteratingSDFReader reader = new IteratingSDFReader(
 				in, DefaultChemObjectBuilder.getInstance()
 				);

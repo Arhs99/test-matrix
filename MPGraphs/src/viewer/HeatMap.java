@@ -53,6 +53,8 @@ import org.openscience.cdk.interfaces.IAtomContainer;
  * </p>
  * <p>
  * There are a number of defined gradient types (look at the static fields), but
+
+				f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
  * you can create any gradient you like by using either of the following
  * functions in the Gradient class:
  * <ul>
@@ -203,6 +205,9 @@ public class HeatMap extends JPanel {
 		repaint();
 	}
 	
+	/**
+	 * @wbp.parser.constructor
+	 */
 	public HeatMap(AdjMatrix adm, boolean useGraphicsYAxis, SideDisplay disp, Color[] colors) throws Exception {
 		this(adm.getConnMatrix().toArray(), useGraphicsYAxis, colors);
 		this.adjRef = adm;
@@ -872,13 +877,14 @@ public class HeatMap extends JPanel {
 	}
 
 	
-	class MouseListener extends MouseInputAdapter {
+	public class MouseListener extends MouseInputAdapter {
 		private HeatMap heat;
-		MouseListener(HeatMap heat) {
+		public MouseListener(HeatMap heat) {
 			this.heat = heat;
 		}
 		public void mouseClicked(MouseEvent e) {
-			
+//			Point p = e.getPoint();
+//			System.out.println(e.getSource().getClass().getName());
 		}
 		
 		public void mouseMoved(MouseEvent e) {
@@ -950,6 +956,24 @@ public class HeatMap extends JPanel {
 		}	
 	}
 	
+	public Molecule[] getMolArray() {
+		return molArray;
+	}
+
+
+	public SideDisplay getDisp() {
+		return disp;
+	}
+	
+	public double[][] getData() {
+		return data;
+	}
+	
+	public Object[][] getMCSArr() {
+		return MCSarray;
+	}
+
+
 	public static void main(String[] args) throws Exception {
 		HeatMap heat = new HeatMap(HeatMap.generateGradTestData(2),//adm.getConnMatrix().toArray(),
 				true, Gradient.GRADIENT_RED_TO_GREEN);

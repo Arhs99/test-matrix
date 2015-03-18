@@ -1,4 +1,4 @@
-package testing;
+package viewer;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -27,7 +27,6 @@ import org.apache.commons.collections15.functors.ConstantTransformer;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.smsd.tools.ExtAtomContainerManipulator;
 
-import viewer.StructureDisplay;
 import edu.uci.ics.jung.graph.DelegateTree;
 import edu.uci.ics.jung.samples.ShortestPathDemo.MyEdgeStrokeFunction;
 import edu.uci.ics.jung.visualization.RenderContext;
@@ -37,7 +36,7 @@ import edu.uci.ics.jung.visualization.decorators.DefaultVertexIconTransformer;
 import edu.uci.ics.jung.visualization.decorators.EdgeShape;
 
 @SuppressWarnings("serial")
-public class TestTree extends JPanel {
+public class PairsTree extends JPanel {
 	Factory<Integer> edgeFactory = new Factory<Integer>() {
 		int i=0;
 		public Integer create() {
@@ -57,7 +56,7 @@ public class TestTree extends JPanel {
 	private int molIndex;
 	private double norm;
 	
-	public TestTree(AdjMatrix adm, int molIndex, double norm) throws Exception {
+	public PairsTree(AdjMatrix adm, int molIndex, double norm) throws Exception {
 		this.adm = adm;
 		this.norm = norm;
 		this.molIndex = molIndex;
@@ -66,29 +65,49 @@ public class TestTree extends JPanel {
 		edgeMap = new HashMap<>();
 		createTree();
 		radialLayout = new ModRadialTreeLayout<Integer,Integer>(graph, 250, 250);//, 900, 900);
-        radialLayout.setSize(new Dimension(1200, 1000));
-        vv =  new VisualizationViewer<Integer,Integer>(radialLayout, new Dimension(1200, 1000));
+ //       radialLayout.setSize(new Dimension(1000, 1000));
+        vv =  new VisualizationViewer<Integer,Integer>(radialLayout, new Dimension(1000, 1000));
+//        vv.setBackground(Color.white);
+//        vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.QuadCurve<Integer, Integer>());
+//        vv.getRenderContext().setEdgeDrawPaintTransformer(new EdgeColor());
+//        vv.getRenderContext().setEdgeStrokeTransformer(new EdgeStrokeFunc());
+//        
+//        DefaultVertexIconTransformer<Integer> vertexIconTransformer =
+//            	new DefaultVertexIconTransformer<Integer>();
+//        vertexIconTransformer.setIconMap(iconMap);
+//        vv.getRenderContext().setVertexIconTransformer(vertexIconTransformer);        
+        //this.add(vv);
+        
+        //final DefaultModalGraphMouse graphMouse = new DefaultModalGraphMouse();
+       // vv.setGraphMouse(graphMouse);
+	}
+	
+	public void setMolIndex(int molIndex) throws Exception {	//modi
+		this.molIndex = molIndex;
+		this.graph = new DelegateTree<Integer, Integer>();
+		this.iconMap = new HashMap<>();
+		this.edgeMap = new HashMap<>();
+		createTree();
+		this.radialLayout = new ModRadialTreeLayout<Integer,Integer>(graph, 250, 250);
+		radialLayout.setSize(new Dimension(1000, 1000));
+		//vv = new VisualizationViewer<Integer,Integer>(radialLayout, new Dimension(1000, 1000));
+		vv.setGraphLayout(radialLayout);
         vv.setBackground(Color.white);
         vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.QuadCurve<Integer, Integer>());
         vv.getRenderContext().setEdgeDrawPaintTransformer(new EdgeColor());
         vv.getRenderContext().setEdgeStrokeTransformer(new EdgeStrokeFunc());
-        
-        final DefaultVertexIconTransformer<Integer> vertexIconTransformer =
-            	new DefaultVertexIconTransformer<Integer>();
-        vertexIconTransformer.setIconMap(iconMap);
-        vv.getRenderContext().setVertexIconTransformer(vertexIconTransformer);        
-        this.add(vv);
-        
-        final DefaultModalGraphMouse graphMouse = new DefaultModalGraphMouse();
-        vv.setGraphMouse(graphMouse);
+		
+		 DefaultVertexIconTransformer<Integer> vertexIconTransformer =
+	            	new DefaultVertexIconTransformer<Integer>();
+	        vertexIconTransformer.setIconMap(iconMap);
+	        vv.getRenderContext().setVertexIconTransformer(vertexIconTransformer);
+		
+		this.add(vv);
+		this.validate();
 	}
 	
-	public void setMolIndex(int molIndex) throws Exception {
-		this.molIndex = molIndex;
-		createTree();
-		radialLayout = new ModRadialTreeLayout<Integer,Integer>(graph, 250, 250);
-		vv.setGraphLayout(radialLayout);
-		vv.repaint();
+	public VisualizationViewer<Integer, Integer> getVViewer() {
+		return vv;
 	}
 	
 	
@@ -213,7 +232,7 @@ public class TestTree extends JPanel {
 		   JFrame frame = new JFrame();
 	        Container content = frame.getContentPane();
 	        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	        content.add(new TestTree(adm, molIndex, 100));
+	        content.add(new PairsTree(adm, molIndex, 100));
 	        frame.pack();
 	        frame.setVisible(true);
 			}
