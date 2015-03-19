@@ -229,7 +229,6 @@ public class HeatMap extends JPanel {
 			this.MCSarray = adjRef.getMCSMatrix().toArray();
 			init(adjRef.getConnMatrix().toArray());
 		} else {
-			
 			this.molArray = adjRef.molVector()[i-1];
 			this.MCSarray = adjRef.getCCSMSDMatr()[i-1].toArray();
 			System.out.println(adjRef.molVector()[i-1]);

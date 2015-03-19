@@ -63,7 +63,7 @@ public class StructureDisplay extends JPanel{
 	}
 	public void drawMol() throws Exception {
 		drawArea = new Rectangle(W-20, H-20);
-		Font font = new Font("Verdana", Font.PLAIN, 18);
+		Font font = new Font("Verdana", Font.PLAIN, 26);
 		List<IGenerator<IAtomContainer>> generators = new ArrayList<IGenerator<IAtomContainer>>();
         generators.add(new BasicSceneGenerator());
         generators.add(new StandardGenerator(font));
@@ -84,7 +84,7 @@ public class StructureDisplay extends JPanel{
         rm.set(StandardGenerator.Visibility.class,
                 SymbolVisibility.iupacRecommendationsWithoutTerminalCarbon());
         rm.set(StandardGenerator.StrokeRatio.class,
-                0.8);
+                0.4);
         rm.set(StandardGenerator.SymbolMarginRatio.class,
                 4d);
 	}
@@ -100,7 +100,7 @@ public class StructureDisplay extends JPanel{
 		rm.set(StandardGenerator.Highlighting.class,
                 StandardGenerator.HighlightStyle.OuterGlow);
 		rm.set(StandardGenerator.OuterGlowWidth.class,
-                3d);
+                6d);
 		HashSet<IAtom> atomSet = new HashSet<IAtom>();
 		
 		for (int i : set) {
@@ -166,18 +166,19 @@ public class StructureDisplay extends JPanel{
 	}
 	
 	public Icon getIcon(int w, int h, Collection<Integer> highL, final double pot,
-			Color col, final String fieldStr) {
+			final Color col, final String fieldStr) {
 		final int width = w;
 		final int height = h;
 		if (highL != null) {
-			this.highlightFlatSelect(highL, col);
+			this.highlightSelect(highL);
+			//this.highlightFlatSelect(highL, Color.cyan);//col);
 		}
 		return new Icon() {
 			@Override
 			public void paintIcon(Component c, Graphics g, int x, int y) {
 				g.setColor(Color.white);
 				g.fillRoundRect(x, y, width, height, 30, 30);
-				g.setColor(Color.black);
+				g.setColor(col);//(Color.black);
 				g.drawRoundRect(x, y, width, height, 30, 30);
 				FontMetrics metrics = c.getFontMetrics(g.getFont());
 				String text = fieldStr + " : " + pot;
