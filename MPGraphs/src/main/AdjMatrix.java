@@ -260,7 +260,7 @@ public class AdjMatrix {
 		//System.out.println(adm.getCCDoubleMatr()[0]);
 		final JFrame f = new JFrame("Heatmap");
 		heat.setToolTipText("");
-		final PairsTree ptree = new PairsTree(adm, 0, 100);
+		final PairsTree ptree = new PairsTree(heat, 0, 100);
 		final JPanel extra = new JPanel();
 		
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -289,6 +289,7 @@ public class AdjMatrix {
 		
 		ptree.getVViewer().addMouseListener(new MouseInputAdapter() {
 			public void mouseClicked(MouseEvent e) {
+				//System.out.println(e.getSource() + " " + ptree.getVViewer().hashCode());
 				extra.remove(ptree);
 				extra.add(heat);
 				disp.setVisible(true);
