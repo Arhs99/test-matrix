@@ -100,7 +100,7 @@ public class StructureDisplay extends JPanel{
 		rm.set(StandardGenerator.Highlighting.class,
                 StandardGenerator.HighlightStyle.OuterGlow);
 		rm.set(StandardGenerator.OuterGlowWidth.class,
-                3d);
+                3d);//
 		HashSet<IAtom> atomSet = new HashSet<IAtom>();
 		
 		for (int i : set) {
