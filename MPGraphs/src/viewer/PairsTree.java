@@ -7,7 +7,10 @@ import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Paint;
+import java.awt.Rectangle;
+import java.awt.Shape;
 import java.awt.Stroke;
+import java.awt.geom.RoundRectangle2D;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -21,6 +24,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import main.AdjMatrix;
+import main.Gradient;
 import main.Molecule;
 import main.SDFreader;
 import main.SMSDpair;
@@ -83,12 +87,21 @@ public class PairsTree extends JPanel {
         vv.setBackground(Color.white);
         vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.QuadCurve<Integer, Integer>());
         vv.getRenderContext().setEdgeDrawPaintTransformer(new EdgeColor());
-        vv.getRenderContext().setEdgeStrokeTransformer(new EdgeStrokeFunc());   
+        vv.getRenderContext().setEdgeStrokeTransformer(new EdgeStrokeFunc());
+        vv.getRenderContext().setArrowFillPaintTransformer(new EdgeColor());// ConstantTransformer(Color.lightGray));
+        vv.getRenderContext().setArrowDrawPaintTransformer(new EdgeColor());//ConstantTransformer(Color.black));
         
-        VertexIconShapeTransformer<Integer> vertexIconShapeTransformer =
-                new VertexIconShapeTransformer<Integer>(new EllipseVertexShapeTransformer<Integer>());
-        vertexIconShapeTransformer.setIconMap(iconMap);
-        vv.getRenderContext().setVertexShapeTransformer(vertexIconShapeTransformer);
+//        VertexIconShapeTransformer<Integer> vertexIconShapeTransformer =
+//                new VertexIconShapeTransformer<Integer>(new EllipseVertexShapeTransformer<Integer>());
+//        vertexIconShapeTransformer.setIconMap(iconMap);
+        vv.getRenderContext().setVertexShapeTransformer(new Transformer<Integer, Shape>() {
+			@Override
+			public Shape transform(Integer arg0) {
+				// TODO Auto-generated method stub
+				return new Rectangle(ICON_WIDTH - 10, ICON_HEIGHT - 10);
+			}
+        	
+        });
         
         DefaultVertexIconTransformer<Integer> vertexIconTransformer =
             	new DefaultVertexIconTransformer<Integer>();
@@ -126,6 +139,20 @@ public class PairsTree extends JPanel {
 		radialLayout.setSize(new Dimension(1200, 900));
 		//vv = new VisualizationViewer<Integer,Integer>(radialLayout, new Dimension(1000, 1000));
 		vv.setGraphLayout(radialLayout);
+		
+//	VertexIconShapeTransformer<Integer> vertexIconShapeTransformer =
+//                new VertexIconShapeTransformer<Integer>(new EllipseVertexShapeTransformer<Integer>());
+//        vertexIconShapeTransformer.setIconMap(iconMap);
+//        vv.getRenderContext().setVertexShapeTransformer(vertexIconShapeTransformer);
+		
+		vv.getRenderContext().setVertexShapeTransformer(new Transformer<Integer, Shape>() {
+			@Override
+			public Shape transform(Integer arg0) {
+				// TODO Auto-generated method stub
+				return new Rectangle(-ICON_WIDTH/2, -ICON_HEIGHT/2, ICON_WIDTH, ICON_HEIGHT);
+			}
+        	
+        });
 		
 		 DefaultVertexIconTransformer<Integer> vertexIconTransformer =
 	            	new DefaultVertexIconTransformer<Integer>();
@@ -213,59 +240,63 @@ public class PairsTree extends JPanel {
 	}
 	
 	   public static void main(String[] args) throws Exception {
-//		   String file = args[0];
-//		   SDFreader sdf = new SDFreader(file);
-//		   TreeSet<Molecule> map = new TreeSet<>();
-//			//HashMap<Integer, Icon> map = new HashMap<>();
-//			int cnt = 0;
-//			for (IAtomContainer mol : sdf.sdfMap().keySet()) {
-//				//StructureDiagramGenerator sdg = new StructureDiagramGenerator();
-////		        sdg.setMolecule(mol.clone());
-////				sdg.generateCoordinates();
-////		        mol = sdg.getMolecule();
-////				StructureDisplay sd = new StructureDisplay(mol);
-////				map.put(cnt, sd.getIcon(200, 200));
-//				//++cnt;
-//				String s = "Rfms Ic50 Um Hpad4 Avg";
-//				String val = sdf.sdfMap().get(mol)[1]; 	// index of field is 0
-//				if (val == null || mol.getAtomCount() == 0) {
-//					continue;
-//				}
-//				ExtAtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol);
-//				mol = ExtAtomContainerManipulator.removeHydrogens(mol);
-//				ExtAtomContainerManipulator.aromatizeCDK(mol);
-//
-//				Molecule molec = new Molecule(mol, Double.parseDouble(val), s);
-//				map.add(molec);
-//				++cnt;
-//				//if (cnt == 20) break;
-//			}
-//			AdjMatrix adm = new AdjMatrix(map);
-//			
-//			int molIndex = 0;
-//			int j = 0;
-//			int max = 0;
-//			ArrayList<SMSDpair> arr = new ArrayList<>();
-//			while (j < adm.getMCSMatrix().toArray().length) {
-//			Object[] smsdArr = adm.getMCSMatrix().toArray()[j];
-//			for (Object pair : smsdArr) {
-//				if (pair != null) {
-//					arr.add((SMSDpair) pair);
-//				}
-//			}
-//			if (arr.size() > max){
-//				max = arr.size();
-//				molIndex = j;
-//			}
-//			++j;
-//			}
-//			
-//			
-//		   JFrame frame = new JFrame();
-//	        Container content = frame.getContentPane();
-//	        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//	        content.add(new PairsTree(adm, molIndex, 100));
-//	        frame.pack();
-//	        frame.setVisible(true);
+		   String file = args[0];
+		   SDFreader sdf = new SDFreader(file);
+		   TreeSet<Molecule> map = new TreeSet<>();
+			//HashMap<Integer, Icon> map = new HashMap<>();
+			int cnt = 0;
+			for (IAtomContainer mol : sdf.sdfMap().keySet()) {
+				//StructureDiagramGenerator sdg = new StructureDiagramGenerator();
+//		        sdg.setMolecule(mol.clone());
+//				sdg.generateCoordinates();
+//		        mol = sdg.getMolecule();
+//				StructureDisplay sd = new StructureDisplay(mol);
+//				map.put(cnt, sd.getIcon(200, 200));
+				//++cnt;
+				String s = "Rfms Ic50 Um Hpad4 Avg";
+				String val = sdf.sdfMap().get(mol)[1]; 	// index of field is 0
+				if (val == null || mol.getAtomCount() == 0) {
+					continue;
+				}
+				ExtAtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol);
+				mol = ExtAtomContainerManipulator.removeHydrogens(mol);
+				ExtAtomContainerManipulator.aromatizeCDK(mol);
+
+				Molecule molec = new Molecule(mol, Double.parseDouble(val), s);
+				map.add(molec);
+				++cnt;
+				if (cnt == 10) break;
+			}
+			AdjMatrix adm = new AdjMatrix(map);
+			SideDisplay disp = new SideDisplay();
+			HeatMap heat = new HeatMap(adm, true, disp, Gradient.GRADIENT_RED_TO_GREEN);
+			
+			int molIndex = 0;
+			int j = 0;
+			int max = 0;
+			ArrayList<SMSDpair> arr = new ArrayList<>();
+			while (j < adm.getMCSMatrix().toArray().length) {
+			Object[] smsdArr = adm.getMCSMatrix().toArray()[j];
+			for (Object pair : smsdArr) {
+				if (pair != null) {
+					arr.add((SMSDpair) pair);
+				}
+			}
+			if (arr.size() > max){
+				max = arr.size();
+				molIndex = j;
+			}
+			++j;
+			}
+			
+			
+		   JFrame frame = new JFrame();
+	        Container content = frame.getContentPane();
+	        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	        PairsTree pt = new PairsTree(heat, 0, 100);
+	        pt.setMolIndex(molIndex);
+	        content.add(pt);
+	        frame.pack();
+	        frame.setVisible(true);
 			}
 }
