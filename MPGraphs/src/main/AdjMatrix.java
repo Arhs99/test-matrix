@@ -21,6 +21,7 @@ import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 
 import org.openscience.cdk.fingerprint.Fingerprinter;
 import org.openscience.cdk.fingerprint.IBitFingerprint;
@@ -52,12 +53,26 @@ public class AdjMatrix {
 	private DenseObjectMatrix2D MCSMatrix;
 	private static final double TANI_THRES = 0.60;
 	private CComp cc;
+	private JProgressBar progressBar;
 
 	public AdjMatrix(Set<Molecule> map) {		
 		molArray = map.toArray(new Molecule[map.size()]);
 		connMatrix = new DenseDoubleMatrix2D(molArray.length, molArray.length);
 		MCSMatrix = new DenseObjectMatrix2D(molArray.length, molArray.length);
 
+		try {
+			init(map);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public AdjMatrix(Set<Molecule> map, JProgressBar progressBar) {
+		molArray = map.toArray(new Molecule[map.size()]);
+		connMatrix = new DenseDoubleMatrix2D(molArray.length, molArray.length);
+		MCSMatrix = new DenseObjectMatrix2D(molArray.length, molArray.length);
+		this.progressBar = progressBar;
 		try {
 			init(map);
 		} catch (Exception e) {
@@ -80,8 +95,16 @@ public class AdjMatrix {
 
 	private void init(Set<Molecule> map) throws Exception {
 		Molecule[] arr = map.toArray(new Molecule[map.size()]);
+		if (progressBar != null) {
+			progressBar.setValue(0);
+		}
 		for (int i = 0; i < arr.length; ++i) {
 			System.out.print("\r " + (i + 1) + " out of " + arr.length + " molecules");
+			if (progressBar != null) {
+				progressBar.setValue(100 * (i + 1) / arr.length);
+				System.out.println(100 * (i + 1) / arr.length);
+				//progressBar.repaint();
+			}
 			for (int j = i+1; j < arr.length; ++j) {
 				Molecule mol1 = arr[i];
 				IAtomContainer ac1 = mol1.getMol();
@@ -241,7 +264,7 @@ public class AdjMatrix {
 			Molecule molec = new Molecule(mol, Double.parseDouble(val), s);
 			map.add(molec);
 			++cnt;
-			if (cnt == 90) break;
+			if (cnt == 10) break;
 		}
 
 		final AdjMatrix adm = new AdjMatrix(map);
