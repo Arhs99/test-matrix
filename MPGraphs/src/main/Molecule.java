@@ -18,7 +18,6 @@ public class Molecule implements Comparable<Molecule> {
 	private String fieldName;
 	private String molID;
 	public Molecule(IAtomContainer ac, double potency) throws CloneNotSupportedException, CDKException {
-		//this.ac = ac;
 		StructureDiagramGenerator sdg = new StructureDiagramGenerator();
         sdg.setMolecule(ac.clone());
 		sdg.generateCoordinates();
@@ -26,7 +25,8 @@ public class Molecule implements Comparable<Molecule> {
 		this.potency = potency;
 	}
 	
-	public Molecule(IAtomContainer ac, double potency, String field) throws CloneNotSupportedException, CDKException {
+	public Molecule(IAtomContainer ac, double potency, String field)
+			throws CloneNotSupportedException,CDKException {
 		this(ac, potency);
 		this.fieldName = field;
 	}
@@ -56,7 +56,6 @@ public class Molecule implements Comparable<Molecule> {
 
 	@Override
 	public int compareTo(Molecule o) {
-		// TODO Auto-generated method stub
 		if (this.ac.equals(o.ac)) {
 		return 0;
 		} else if (this.potency.equals(o.potency)) {

@@ -12,6 +12,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import main.Molecule;
+import java.awt.Font;
 
 
 public class SideDisplay extends JPanel {
@@ -23,6 +24,8 @@ public class SideDisplay extends JPanel {
 	private StructureDisplay tdp2;
 	private JLabel label1 = new JLabel();
 	private JLabel label2 = new JLabel();
+	private JLabel idLabel1 = new JLabel();
+	private JLabel idLabel2 = new JLabel();
 	public SideDisplay() throws Exception {
 		super();
 		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -41,46 +44,47 @@ public class SideDisplay extends JPanel {
 
 		this.add(Box.createRigidArea(new Dimension(300,60)));
 		
-		BorderLayout bl_tdp1 = new BorderLayout();
-		bl_tdp1.setVgap(5);
-		bl_tdp1.setHgap(5);
-		tdp1.setLayout(bl_tdp1);
-		this.add(tdp1);
-		
-		tdp1.add(label1, BorderLayout.PAGE_END);
-		label1.setHorizontalAlignment(JLabel.CENTER);// setAlignmentY(CENTER_ALIGNMENT);
-		tdp1.setBorder(BorderFactory.createCompoundBorder(
+		JPanel top = new JPanel(new BorderLayout());
+		top.setBackground(Color.WHITE);
+		JPanel bot = new JPanel(new BorderLayout());
+		bot.setBackground(Color.WHITE);
+	
+		top.add(tdp1, BorderLayout.CENTER);
+		top.add(label1, BorderLayout.PAGE_END);
+		idLabel1.setFont(new Font("Dialog", Font.BOLD, 14));
+		top.add(idLabel1, BorderLayout.NORTH);
+		idLabel1.setHorizontalAlignment(JLabel.CENTER);
+		label1.setHorizontalAlignment(JLabel.CENTER);
+		top.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(Color.black),
                 tdp1.getBorder()));
+		this.add(top);
+		
 		this.add(Box.createVerticalGlue());
 		
-		BorderLayout bl_tdp2 = new BorderLayout();
-		bl_tdp2.setVgap(5);
-		bl_tdp2.setHgap(5);
-		tdp2.setLayout(bl_tdp2);	
-		this.add(tdp2);
-		
-		tdp2.add(label2, BorderLayout.PAGE_END);
-		label2.setHorizontalAlignment(JLabel.CENTER);//setAlignmentX(CENTER_ALIGNMENT);
-		tdp2.setBorder(BorderFactory.createCompoundBorder(
+		bot.add(tdp2, BorderLayout.CENTER);
+		bot.add(label2, BorderLayout.PAGE_END);
+		idLabel2.setFont(new Font("Dialog", Font.BOLD, 14));
+		bot.add(idLabel2, BorderLayout.NORTH);
+		idLabel2.setHorizontalAlignment(JLabel.CENTER);
+		label2.setHorizontalAlignment(JLabel.CENTER);
+		bot.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(Color.black),
                 tdp2.getBorder()));
-		
+		this.add(bot);
 
 		this.add(Box.createRigidArea(new Dimension(300,300)));
 		
 		
 		
-		//this.validate();
-		
-		//this.setPreferredSize(new Dimension(300, 1000));
-		
-		
+		this.validate();
 	}
+	
 	public void set(Molecule query, Molecule target, Collection<Integer> queryHi,
 			Collection<Integer> targetHi) throws Exception {
 		tdp1.setMol(query.getMol());
 		tdp1.highlightSelect(queryHi);
+		idLabel1.setText(query.getMolID());
 		label1.setText(query.getFieldName() + ": " +
 		query.getPotency().toString());
 		
@@ -88,6 +92,7 @@ public class SideDisplay extends JPanel {
 		
 		tdp2.setMol(target.getMol());
 		tdp2.highlightSelect(targetHi);
+		idLabel2.setText(target.getMolID());
 		label2.setText(target.getFieldName() + ": " +
 		target.getPotency().toString());
 		
@@ -101,6 +106,8 @@ public class SideDisplay extends JPanel {
 		tdp2.clear();
 		label1.setText("");
 		label2.setText("");
+		idLabel1.setText("");
+		idLabel2.setText("");
 		
 		this.repaint();
 	}

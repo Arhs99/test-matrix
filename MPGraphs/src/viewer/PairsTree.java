@@ -211,7 +211,7 @@ public class PairsTree extends JPanel {
 		StructureDisplay sd = new StructureDisplay(rootMol.getMol());
 		String fieldStr = rootMol.getFieldName().substring(0, 10); // show only 10 first chars of field name
 		iconMap.put(0, sd.getIcon(ICON_WIDTH, ICON_HEIGHT, null,
-				rootMol.getPotency(), Color.black, fieldStr));
+				rootMol.getPotency(), Color.black, fieldStr, rootMol.getMolID()));
 		graph.setRoot(0);
 		
 		int childNum = 1;
@@ -231,7 +231,7 @@ public class PairsTree extends JPanel {
 				}
 				Collection<Integer> highL = i > molIndex ? pair.targetHi() : pair.queryHi();
 				iconMap.put(childNum, sd.getIcon(ICON_WIDTH, ICON_HEIGHT,
-						highL, mol.getPotency(), col, fieldStr));
+						highL, mol.getPotency(), col, fieldStr, mol.getMolID()));
 				graph.addEdge(edgeFactory.create(), 0, childNum);	
 				edgeMap.put(childNum - 1, dP);		// edge numbering has to start from 0
 				++childNum;
