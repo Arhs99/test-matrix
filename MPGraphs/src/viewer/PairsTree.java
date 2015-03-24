@@ -35,7 +35,9 @@ import org.apache.commons.collections15.functors.ConstantTransformer;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.smsd.tools.ExtAtomContainerManipulator;
 
+import edu.uci.ics.jung.algorithms.layout.FRLayout;
 import edu.uci.ics.jung.algorithms.layout.RadialTreeLayout;
+import edu.uci.ics.jung.algorithms.layout.util.RandomLocationTransformer;
 import edu.uci.ics.jung.graph.DelegateTree;
 import edu.uci.ics.jung.samples.ShortestPathDemo.MyEdgeStrokeFunction;
 import edu.uci.ics.jung.samples.VertexImageShaperDemo.DemoVertexIconShapeTransformer;
@@ -59,7 +61,7 @@ public class PairsTree extends JPanel {
 	private static final int ICON_WIDTH = 180;
 	private static final int ICON_HEIGHT = 180;
 	//private TreeLayout<Integer, Integer> layout;
-	private RadialTreeLayout<Integer,Integer> radialLayout;
+	//private RadialTreeLayout<Integer,Integer> radialLayout;
 	private Map<Integer,Icon> iconMap;
 	private Map<Integer, Double> edgeMap;
 	private HeatMap heat;
@@ -81,9 +83,17 @@ public class PairsTree extends JPanel {
 		iconMap = new HashMap<>();
 		edgeMap = new HashMap<>();
 		createTree();
-		radialLayout = new RadialTreeLayout<Integer,Integer>(graph, 250, 250);//, 900, 900);
-        radialLayout.setSize(new Dimension(1200, 900));
-        vv =  new VisualizationViewer<Integer,Integer>(radialLayout, new Dimension(1200, 900));
+		
+		FRLayout<Integer,Integer> flayout = new FRLayout<Integer, Integer>(graph);
+        flayout.setMaxIterations(100);
+        flayout.setInitializer(new RandomLocationTransformer<Integer>(new Dimension(1200, 800), 0));
+        flayout.setSize(new Dimension(1200, 800));
+        vv = new VisualizationViewer<>(flayout, new Dimension(1200, 900));
+		
+//		radialLayout = new RadialTreeLayout<Integer,Integer>(graph, 250, 250);//, 900, 900);
+//        radialLayout.setSize(new Dimension(1200, 900));
+//        vv =  new VisualizationViewer<Integer,Integer>(radialLayout, new Dimension(1200, 900));
+        
         vv.setBackground(Color.white);
         vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.QuadCurve<Integer, Integer>());
         vv.getRenderContext().setEdgeDrawPaintTransformer(new EdgeColor());
@@ -98,7 +108,7 @@ public class PairsTree extends JPanel {
 			@Override
 			public Shape transform(Integer arg0) {
 				// TODO Auto-generated method stub
-				return new Rectangle(ICON_WIDTH - 10, ICON_HEIGHT - 10);
+				return new Rectangle(ICON_WIDTH - 5, ICON_HEIGHT - 5);
 			}
         	
         });
@@ -135,10 +145,16 @@ public class PairsTree extends JPanel {
 		this.iconMap = new HashMap<>();
 		this.edgeMap = new HashMap<>();
 		createTree();
-		this.radialLayout = new RadialTreeLayout<Integer,Integer>(graph, 250, 250);
-		radialLayout.setSize(new Dimension(1200, 900));
-		//vv = new VisualizationViewer<Integer,Integer>(radialLayout, new Dimension(1000, 1000));
-		vv.setGraphLayout(radialLayout);
+		
+//		this.radialLayout = new RadialTreeLayout<Integer,Integer>(graph, 250, 250);
+//		radialLayout.setSize(new Dimension(1200, 900));
+//		vv.setGraphLayout(radialLayout);
+		
+		FRLayout<Integer,Integer> flayout = new FRLayout<Integer, Integer>(graph);
+        flayout.setMaxIterations(100);
+        flayout.setInitializer(new RandomLocationTransformer<Integer>(new Dimension(1200, 800), 0));
+        flayout.setSize(new Dimension(1200, 800));
+        vv.setGraphLayout(flayout);
 		
 //	VertexIconShapeTransformer<Integer> vertexIconShapeTransformer =
 //                new VertexIconShapeTransformer<Integer>(new EllipseVertexShapeTransformer<Integer>());

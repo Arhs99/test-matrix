@@ -30,6 +30,8 @@ import javax.swing.event.MouseInputAdapter;
 
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IBond;
+import org.openscience.smsd.tools.ExtAtomContainerManipulator;
 
 import viewer.HeatMap;
 import viewer.PairsTree;
@@ -58,17 +60,27 @@ public class Main extends JPanel {
 		public AdjMatrix doInBackground() throws Exception {
 			Set<Molecule> set = new TreeSet<>();
 			int cnt = 0;
-
+			String s = sdf.fieldStr()[fieldInd];
 			for (IAtomContainer mol : sdf.sdfMap().keySet()) {
-				String s = "Rfms Ic50 Um Hpad4 Avg";
+				
 				String val = sdf.sdfMap().get(mol)[fieldInd];
 				if (val == null || mol.getAtomCount() == 0) {
 					continue;
 				}
 				
-				//ExtAtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol);
-				//mol = ExtAtomContainerManipulator.removeHydrogens(mol);
-				//ExtAtomContainerManipulator.aromatizeCDK(mol);
+//				boolean isUNSET = false;
+//				for (IBond bond : mol.bonds()) {
+//					if (bond.getOrder() == IBond.Order.UNSET) {
+//						isUNSET = true;
+//						break;
+//					}
+//				}
+//				
+//				if (isUNSET) break;
+				
+//				ExtAtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol);
+//				mol = ExtAtomContainerManipulator.removeHydrogens(mol);
+//				ExtAtomContainerManipulator.aromatizeCDK(mol);
 
 				Molecule molec = new Molecule(mol, Double.parseDouble(val), s);
 				if (idInd == 0) {
@@ -79,7 +91,7 @@ public class Main extends JPanel {
 				}				
 				set.add(molec);
 				++cnt;
-				if (cnt == 10) break;
+				if (cnt == 20) break;
 			}
 			return new AdjMatrix(set, progressBar);
 		}
@@ -87,6 +99,8 @@ public class Main extends JPanel {
 		public void done() {
 			try {
 				adm = get();
+				PairsModel pm;
+				pm = new PairsModel(adm, norm);	
 				disp = new SideDisplay();
 				heat = new HeatMap(adm, true, disp, Gradient.GRADIENT_RED_TO_GREEN);
 				int CCcount = adm.getCCDoubleMatr().length;
@@ -114,6 +128,19 @@ public class Main extends JPanel {
 				comboClustBox.setAlignmentY(Component.TOP_ALIGNMENT);
 				disp.add(comboClustBox);
 				comboClustBox.setModel(new DefaultComboBoxModel(comboDesc));
+				
+				JComboBox comboTransfBox = new JComboBox();
+				comboTransfBox.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+//						JComboBox cb = (JComboBox)e.getSource();
+//						int ind = cb.getSelectedIndex();
+//						heat.updateMap(ind);
+//						Main.this.validate();
+					}
+				});
+				comboTransfBox.setAlignmentY(Component.TOP_ALIGNMENT);
+				disp.add(comboTransfBox);
+				comboTransfBox.setModel(new DefaultComboBoxModel(pm.comboTransf()));
 				
 				Main.this.add(disp, BorderLayout.EAST);				
 				Main.this.validate();

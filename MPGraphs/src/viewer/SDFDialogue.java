@@ -101,7 +101,7 @@ public class SDFDialogue extends JDialog implements ActionListener {
 			{
 				list_1 = new JList();
 				String[] str = new String[fieldStr.length + 1];
-				str[0] = "Default (100)";
+				str[0] = "Default (1,2,...)";
 				for (int i = 0; i < fieldStr.length; ++i) {
 					str[i + 1] = fieldStr[i];
 				}
