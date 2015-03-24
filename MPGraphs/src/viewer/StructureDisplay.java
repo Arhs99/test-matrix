@@ -166,7 +166,7 @@ public class StructureDisplay extends JPanel{
 	}
 	
 	public Icon getIcon(int w, int h, Collection<Integer> highL, final double pot,
-			final Color col, final String fieldStr) {
+			final Color col, final String fieldStr, final String id) {
 		final int width = w;
 		final int height = h;
 		if (highL != null) {
@@ -184,10 +184,13 @@ public class StructureDisplay extends JPanel{
 				String text = fieldStr + " : " + pot;
 				int textW = SwingUtilities.computeStringWidth(metrics, text);
 				int textH = metrics.getHeight();
+				int idW = SwingUtilities.computeStringWidth(metrics, id);
+				int idH = metrics.getHeight();
 				g.setColor(Color.BLACK);
-				g.drawString(text, x + Math.max(5, (width - textW)/2), y + height - textH);
+				g.drawString(text, x + Math.max(5, (width - textW)/2), y + height - textH + 4);
+				g.drawString(id, x + Math.max(5, (width - idW)/2), y + idH);
 				
-				Rectangle drawingArea = new Rectangle(x, y, width - 5, height - 6 - textH);
+				Rectangle drawingArea = new Rectangle(x + 2, y + 2, width - 5, height - 5 - textH);
 				AWTDrawVisitor visitor = new AWTDrawVisitor((Graphics2D) g);
 				renderer.paint(mol, visitor, drawingArea, true);
 			}

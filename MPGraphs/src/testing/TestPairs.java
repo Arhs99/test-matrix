@@ -67,7 +67,7 @@ public class TestPairs {
 		}
 		AdjMatrix adm = new AdjMatrix(map);
 		IAtomContainerSet toWriteSet = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainerSet.class);
-		for (int k = 0; k < adm.getCCSMSDMatr().length; ++k) { //ObjectMatrix2D matr : adm.getCCSMSDMatr()) {
+		for (int k = 0; k < adm.getCCSMSDMatr().length; ++k) {
 			if (adm.molVector()[k].length > 1) {
 				for (int i = 0; i < adm.molVector()[k].length; ++i) {
 					for (int j = i + 1; j < adm.molVector()[k].length; ++j) {
