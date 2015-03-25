@@ -155,9 +155,11 @@ public class PairsModel {
 			return this.toString().hashCode();
 		}
 		
-//		public boolean equals(MolTransf o) {
-//			return this.toString().equals(o.toString());
-//		}
+		@Override
+		public boolean equals(Object o) {
+			return (o.getClass() == this.getClass() && 
+					this.toString().equals(o.toString()));
+		}
 		
 		@Override
 		public int compareTo(MolTransf o) {
@@ -251,7 +253,9 @@ public class PairsModel {
 		
 		final HashMap<MolTransf, ArrayList<Integer>> hash = new HashMap<>(); // hashtable of pair , Array of indexes
 		//for (int j = 0; j < 3; j++) {
+		HashMap<MolTransf, Integer> test = new HashMap<>();
 			for (int i = 0; i < transfInd.length; ++i) {
+				
 				ArrayList<Integer> keys = hash.get(trArr.get(i));
 				if (keys != null) {
 					System.out.println(">>>>>>> " + trArr.get(i));
@@ -268,9 +272,9 @@ public class PairsModel {
 			@Override
 			public int compare(MolTransf o1, MolTransf o2) {
 				if (hash.get(o1).size() < hash.get(o2).size()) {
-					return -1;
-				} else if (hash.get(o1).size() > hash.get(o2).size()) {
 					return 1;
+				} else if (hash.get(o1).size() > hash.get(o2).size()) {
+					return -1;
 				} else {
 					return o1.compareTo(o2);
 				}
@@ -278,27 +282,28 @@ public class PairsModel {
 			
 		});		
 		transfFreq.putAll(hash);
-		System.out.println(transfFreq.size() + "  " + hash.size());
-		System.out.println(hash.toString());
-		System.out.println(transfFreq.toString());
+		
+		for (int i = 0; i < hash.size(); ++i) {
+			MolTransf mt = (MolTransf) hash.keySet().toArray()[i];
+			int freq = transfFreq.get(mt).size();
+		}
+		
 	}
 	
 	public String[] comboTransf() {
 		String[] st = new String[transfFreq.size()];
 		for (int i = 0; i < st.length; ++i) {
 			MolTransf mt = (MolTransf) transfFreq.keySet().toArray()[i];
-//			if (transfFreq.get(mt) !=null)
-//				System.out.println(i+ " : " + transfFreq.get(mt));
 			int freq = transfFreq.get(mt).size();
 			st[i] = mt + " (" + freq + ")";
-			
-			System.out.println(i + " " + st[i]);
 		}
+		
 		return st;
 	}
 	
 	public void printPairTansf() {
-		String[] s = comboTransf();
+		for (String s : comboTransf())
+			System.out.println(s);
 	}
 	
 	public int size() {

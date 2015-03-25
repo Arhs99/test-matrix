@@ -16,16 +16,22 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
 
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
+import javax.swing.border.BevelBorder;
+import javax.swing.border.SoftBevelBorder;
 import javax.swing.event.MouseInputAdapter;
 
 import org.openscience.cdk.exception.CDKException;
@@ -91,7 +97,7 @@ public class Main extends JPanel {
 				}				
 				set.add(molec);
 				++cnt;
-				if (cnt == 20) break;
+				if (cnt == 10) break;
 			}
 			return new AdjMatrix(set, progressBar);
 		}
@@ -116,7 +122,20 @@ public class Main extends JPanel {
 				
 				extra.remove(progressBar);
 				extra.add(heat);
+				
+				JPanel panel_1 = new JPanel();
+				panel_1.setBorder(new SoftBevelBorder(BevelBorder.LOWERED, null, null, null, null));
+				disp.add(panel_1, BorderLayout.SOUTH);
+				panel_1.setLayout(new BoxLayout(panel_1, BoxLayout.PAGE_AXIS));
+				
+				
+				JLabel lblNewLabel = new JLabel("Clusters");
+				lblNewLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+				lblNewLabel.setHorizontalAlignment(SwingConstants.LEFT);
+				panel_1.add(lblNewLabel);
+				
 				JComboBox comboClustBox = new JComboBox();
+				lblNewLabel.setLabelFor(comboClustBox);
 				comboClustBox.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
 						JComboBox cb = (JComboBox)e.getSource();
@@ -126,9 +145,15 @@ public class Main extends JPanel {
 					}
 				});
 				comboClustBox.setAlignmentY(Component.TOP_ALIGNMENT);
-				disp.add(comboClustBox);
+				panel_1.add(comboClustBox);
 				comboClustBox.setModel(new DefaultComboBoxModel(comboDesc));
 				
+				Component rigidArea = Box.createRigidArea(new Dimension(10, 10));
+				panel_1.add(rigidArea);
+				
+				JLabel lblNewLabel_1 = new JLabel("Transformations");
+				lblNewLabel_1.setAlignmentX(Component.CENTER_ALIGNMENT);
+				panel_1.add(lblNewLabel_1);
 				JComboBox comboTransfBox = new JComboBox();
 				comboTransfBox.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
@@ -138,8 +163,8 @@ public class Main extends JPanel {
 //						Main.this.validate();
 					}
 				});
-				comboTransfBox.setAlignmentY(Component.TOP_ALIGNMENT);
-				disp.add(comboTransfBox);
+				//comboTransfBox.setAlignmentY(Component.TOP_ALIGNMENT);
+				panel_1.add(comboTransfBox);
 				comboTransfBox.setModel(new DefaultComboBoxModel(pm.comboTransf()));
 				
 				Main.this.add(disp, BorderLayout.EAST);				
