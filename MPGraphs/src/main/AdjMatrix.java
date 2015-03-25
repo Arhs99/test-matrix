@@ -264,7 +264,7 @@ public class AdjMatrix {
 			Molecule molec = new Molecule(mol, Double.parseDouble(val), s);
 			map.add(molec);
 			++cnt;
-			if (cnt == 80) break;
+			if (cnt == 20) break;
 		}
 
 		AdjMatrix adm = new AdjMatrix(map);
