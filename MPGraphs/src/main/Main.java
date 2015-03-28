@@ -55,6 +55,8 @@ public class Main extends JPanel {
 	private double norm = 100.0;
 	private int fieldInd;
 	private int idInd;
+	private JComboBox comboClustBox;
+	private JComboBox comboTransfBox; 
 	
 	class Task extends SwingWorker<AdjMatrix, Void> {
 		private SDFreader sdf;
@@ -74,16 +76,6 @@ public class Main extends JPanel {
 					continue;
 				}
 				
-//				boolean isUNSET = false;
-//				for (IBond bond : mol.bonds()) {
-//					if (bond.getOrder() == IBond.Order.UNSET) {
-//						isUNSET = true;
-//						break;
-//					}
-//				}
-//				
-//				if (isUNSET) break;
-				
 //				ExtAtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol);
 //				mol = ExtAtomContainerManipulator.removeHydrogens(mol);
 //				ExtAtomContainerManipulator.aromatizeCDK(mol);
@@ -97,7 +89,7 @@ public class Main extends JPanel {
 				}				
 				set.add(molec);
 				++cnt;
-				if (cnt == 10) break;
+				if (cnt == 80) break;
 			}
 			return new AdjMatrix(set, progressBar);
 		}
@@ -105,8 +97,9 @@ public class Main extends JPanel {
 		public void done() {
 			try {
 				adm = get();
-				PairsModel pm;
-				pm = new PairsModel(adm, norm);	
+				final PairsModel pm;
+				pm = new PairsModel(adm, norm);
+				String[] comboTransf = pm.comboTransf();
 				disp = new SideDisplay();
 				heat = new HeatMap(adm, true, disp, Gradient.GRADIENT_RED_TO_GREEN);
 				int CCcount = adm.getCCDoubleMatr().length;
@@ -123,6 +116,25 @@ public class Main extends JPanel {
 				extra.remove(progressBar);
 				extra.add(heat);
 				
+				class comboListener implements ActionListener {
+
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						JComboBox cb = (JComboBox)e.getSource();
+						if (e.getSource() == comboClustBox) {
+							int ind = cb.getSelectedIndex();
+							heat.updateMap(ind);
+							comboTransfBox.setModel(new DefaultComboBoxModel
+									(pm.comboTransfClust(ind)));
+							//comboTransfBox.repaint();
+							Main.this.validate();
+						}
+												
+					}
+					
+				}
+				
+				comboListener comboListener = new comboListener();
 				JPanel panel_1 = new JPanel();
 				panel_1.setBorder(new SoftBevelBorder(BevelBorder.LOWERED, null, null, null, null));
 				disp.add(panel_1, BorderLayout.SOUTH);
@@ -134,16 +146,9 @@ public class Main extends JPanel {
 				lblNewLabel.setHorizontalAlignment(SwingConstants.LEFT);
 				panel_1.add(lblNewLabel);
 				
-				JComboBox comboClustBox = new JComboBox();
+				comboClustBox = new JComboBox();
 				lblNewLabel.setLabelFor(comboClustBox);
-				comboClustBox.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						JComboBox cb = (JComboBox)e.getSource();
-						int ind = cb.getSelectedIndex();
-						heat.updateMap(ind);
-						Main.this.validate();
-					}
-				});
+				comboClustBox.addActionListener(comboListener);
 				comboClustBox.setAlignmentY(Component.TOP_ALIGNMENT);
 				panel_1.add(comboClustBox);
 				comboClustBox.setModel(new DefaultComboBoxModel(comboDesc));
@@ -154,18 +159,10 @@ public class Main extends JPanel {
 				JLabel lblNewLabel_1 = new JLabel("Transformations");
 				lblNewLabel_1.setAlignmentX(Component.CENTER_ALIGNMENT);
 				panel_1.add(lblNewLabel_1);
-				JComboBox comboTransfBox = new JComboBox();
-				comboTransfBox.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-//						JComboBox cb = (JComboBox)e.getSource();
-//						int ind = cb.getSelectedIndex();
-//						heat.updateMap(ind);
-//						Main.this.validate();
-					}
-				});
-				//comboTransfBox.setAlignmentY(Component.TOP_ALIGNMENT);
+				comboTransfBox = new JComboBox();
+				comboTransfBox.addActionListener(comboListener);
 				panel_1.add(comboTransfBox);
-				comboTransfBox.setModel(new DefaultComboBoxModel(pm.comboTransf()));
+				comboTransfBox.setModel(new DefaultComboBoxModel(comboTransf));
 				
 				Main.this.add(disp, BorderLayout.EAST);				
 				Main.this.validate();
@@ -239,7 +236,6 @@ public class Main extends JPanel {
         progressBar.setStringPainted(true);
         extra.add(progressBar);
         this.add(extra);
-        //this.repaint();
 		Task task = new Task(sdf);
 		task.execute();		
 		}

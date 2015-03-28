@@ -10,6 +10,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -268,6 +270,10 @@ public class AdjMatrix {
 		}
 
 		AdjMatrix adm = new AdjMatrix(map);
+//		FileOutputStream fos = new FileOutputStream("test.adm");
+//		ObjectOutputStream oos = new ObjectOutputStream(fos);
+//		oos.writeObject(adm.molArray);
+//		oos.close();
 		PairsModel pm = new PairsModel(adm, 100);
 		pm.printPairTansf();
 		System.out.println(pm.size());
