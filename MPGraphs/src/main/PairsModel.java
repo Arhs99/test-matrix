@@ -141,6 +141,18 @@ public class PairsModel {
 			}
 		}
 		
+		public MolTransf() {
+			// TODO Auto-generated constructor stub
+		}
+
+		public MolTransf invPair() {
+			MolTransf inv = new MolTransf();
+			inv.right = this.left;
+			inv.left = this.right;
+			inv.direction = - this.direction;
+			return inv;
+		}
+		
 		public String toString() {
 			return left + " -> " + right;
 		}
@@ -204,21 +216,21 @@ public class PairsModel {
 						MolTransf mt = new MolTransf(queryBit, targetBit);
 
 						
-						if (mt.getDirection() == -1) {
-							IAtomContainer tac;
-							tac = target;
-							target = query;
-							query = tac;
-							
-							tac = targetBit;
-							targetBit = queryBit;
-							queryBit = tac;
-							
-							Double temp;
-							temp = targetPot;
-							targetPot = queryPot;
-							queryPot = temp;
-						}
+//						if (mt.getDirection() == -1) {
+//							IAtomContainer tac;
+//							tac = target;
+//							target = query;
+//							query = tac;
+//							
+//							tac = targetBit;
+//							targetBit = queryBit;
+//							queryBit = tac;
+//							
+//							Double temp;
+//							temp = targetPot;
+//							targetPot = queryPot;
+//							queryPot = temp;
+//						}
 						
 						double dlnX = (DeltaP.logDiff(queryPot, targetPot, norm) == Double.MIN_VALUE ?
 								0 : DeltaP.logDiff(queryPot, targetPot, norm));
@@ -242,8 +254,8 @@ public class PairsModel {
 		for (int i = 0; i < size; ++i) {
 			transfInd[i] = i;
 		}
+		
 		Arrays.sort(transfInd, new Comparator<Integer>() {
-
 			@Override
 			public int compare(Integer o1, Integer o2) {
 				return trArr.get(o1).compareTo(trArr.get(o2));
@@ -251,45 +263,90 @@ public class PairsModel {
 			
 		});
 		
-		final HashMap<MolTransf, ArrayList<Integer>> hash = new HashMap<>(); // hashtable of pair , Array of indexes
-		//for (int j = 0; j < 3; j++) {
-		HashMap<MolTransf, Integer> test = new HashMap<>();
-			for (int i = 0; i < transfInd.length; ++i) {
-				
-				ArrayList<Integer> keys = hash.get(trArr.get(i));
-				if (keys != null) {
-					System.out.println(">>>>>>> " + trArr.get(i));
-				} else {
-					keys = new ArrayList<>();
-				}
-				keys.add(i);
-				hash.put(trArr.get(i), keys);
-			}
-		//}
-		// tree to store previous table in order of frequency of key transformation
-		transfFreq = new TreeMap<>(new Comparator<MolTransf>() {
-			
-			@Override
-			public int compare(MolTransf o1, MolTransf o2) {
-				if (hash.get(o1).size() < hash.get(o2).size()) {
-					return 1;
-				} else if (hash.get(o1).size() > hash.get(o2).size()) {
-					return -1;
-				} else {
-					return o1.compareTo(o2);
-				}
-			}
-			
-		});		
-		transfFreq.putAll(hash);
+//		final HashMap<MolTransf, ArrayList<Integer>> hash = new HashMap<>(); // hashtable of pair , Array of indexes
+//			for (int i = 0; i < transfInd.length; ++i) {				
+//				ArrayList<Integer> keys = hash.get(trArr.get(i));
+//				if (keys == null) {
+//					keys = new ArrayList<>();
+//				}
+//				keys.add(i);
+//				hash.put(trArr.get(i), keys);
+//				
+//				MolTransf inv = trArr.get(i).invPair();		//insert the inverse transforms too
+//				keys = hash.get(inv);
+//				if (keys == null) {
+//					keys = new ArrayList<>();
+//				}
+//				keys.add(i);
+//				hash.put(inv, keys);			
+//			}
+//		// tree to store previous table in order of frequency of key transformation
+//		transfFreq = new TreeMap<>(new Comparator<MolTransf>() {
+//			
+//			@Override
+//			public int compare(MolTransf o1, MolTransf o2) {
+//				if (hash.get(o1).size() < hash.get(o2).size()) {
+//					return 1;
+//				} else if (hash.get(o1).size() > hash.get(o2).size()) {
+//					return -1;
+//				} else {
+//					return o1.compareTo(o2);
+//				}
+//			}
+//			
+//		});		
+//		transfFreq.putAll(hash);
 		
-		for (int i = 0; i < hash.size(); ++i) {
-			MolTransf mt = (MolTransf) hash.keySet().toArray()[i];
-			int freq = transfFreq.get(mt).size();
-		}
+		transfFreq = transfMap(transfInd);
+		
+//		for (int i = 0; i < hash.size(); ++i) {
+//			MolTransf mt = (MolTransf) hash.keySet().toArray()[i];
+//			int freq = transfFreq.get(mt).size();
+//		}
 		
 	}
 	
+	private TreeMap<MolTransf, ArrayList<Integer>> transfMap(Integer[] arr) {
+		final HashMap<MolTransf, ArrayList<Integer>> hash = new HashMap<>(); // hashtable of pair , Array of indexes
+		for (int i = 0; i < arr.length; ++i) {				
+			ArrayList<Integer> keys = hash.get(trArr.get(arr[i]));
+			if (keys == null) {
+				keys = new ArrayList<>();
+			}
+			keys.add(arr[i]);
+			hash.put(trArr.get(arr[i]), keys);
+			
+			MolTransf inv = trArr.get(arr[i]).invPair();		//insert the inverse transforms too
+			keys = hash.get(inv);
+			if (keys == null) {
+				keys = new ArrayList<>();
+			}
+			keys.add(arr[i]);
+			hash.put(inv, keys);			
+		}
+	// tree to store previous table in order of frequency of key transformation
+		TreeMap<MolTransf, ArrayList<Integer>>transfMap = new TreeMap<>
+			(new Comparator<MolTransf>() {
+		@Override
+		public int compare(MolTransf o1, MolTransf o2) {
+			if (hash.get(o1).size() < hash.get(o2).size()) {
+				return 1;
+			} else if (hash.get(o1).size() > hash.get(o2).size()) {
+				return -1;
+			} else {
+				return o1.compareTo(o2);
+			}
+		}
+		
+	});		
+	transfMap.putAll(hash);
+	return transfMap;
+	}
+	
+	/** String representation of transformation sets sorted by size
+	 * contains all clusters
+	 * @return
+	 */
 	public String[] comboTransf() {
 		String[] st = new String[transfFreq.size()];
 		for (int i = 0; i < st.length; ++i) {
@@ -301,8 +358,51 @@ public class PairsModel {
 		return st;
 	}
 	
+	/**
+	 * @param n	cluster number (1 to ) n=0 for all clusters
+	 * @return
+	 */
+	public String[] comboTransfClust(int n) {
+		if (n == 0) return comboTransf();
+		
+		ArrayList<Integer> arr = new ArrayList<>();
+		for (int i = 0; i < clustArr.size(); i++) {
+			if (clustArr.get(i) == n) {
+				arr.add(i);
+			}
+		}
+		
+		TreeMap<MolTransf, ArrayList<Integer>> temp =
+				transfMap( arr.toArray(new Integer[arr.size()]));
+		
+//		TreeMap<MolTransf, ArrayList<Integer>> temp = new TreeMap<>(transfFreq);
+//		for (MolTransf mt : temp.keySet()) {
+//			ArrayList<Integer> keys = temp.get(mt);
+//			for (Integer i : keys) {
+//				if (clustArr.get(i) != n) {
+//					keys.remove(i);
+//				}	
+//			}
+//			if (keys.isEmpty()) {
+//				temp.remove(mt);
+//			}
+//		}
+		String[] st = new String[temp.size()];
+		for (int i = 0; i < st.length; ++i) {
+			MolTransf mt = (MolTransf) temp.keySet().toArray()[i];
+			int freq = temp.get(mt).size();
+			st[i] = mt + " (" + freq + ")";
+		}
+		
+		return st;
+		
+	}
+	
 	public void printPairTansf() {
 		for (String s : comboTransf())
+			System.out.println(s);
+		System.out.println();
+		for (String s : comboTransfClust(1))
 			System.out.println(s);
 	}
 	

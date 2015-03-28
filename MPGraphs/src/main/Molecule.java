@@ -3,6 +3,8 @@
  */
 package main;
 
+import java.io.Serializable;
+
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.layout.StructureDiagramGenerator;
@@ -11,8 +13,12 @@ import org.openscience.cdk.layout.StructureDiagramGenerator;
  * @author kostasp
  *
  */
-public class Molecule implements Comparable<Molecule> {
+public class Molecule implements Serializable, Comparable<Molecule> {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1230923932248065052L;
 	private IAtomContainer ac;
 	private Double potency;
 	private String fieldName;
