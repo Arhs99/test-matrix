@@ -40,6 +40,7 @@ import org.openscience.cdk.interfaces.IBond;
 import org.openscience.smsd.tools.ExtAtomContainerManipulator;
 
 import viewer.HeatMap;
+import viewer.PairsGraph;
 import viewer.PairsTree;
 import viewer.SDFDialogue;
 import viewer.SideDisplay;
@@ -56,7 +57,11 @@ public class Main extends JPanel {
 	private int fieldInd;
 	private int idInd;
 	private JComboBox comboClustBox;
-	private JComboBox comboTransfBox; 
+	private JComboBox comboTransfBox;
+	private int clustInd = 0;
+	private JLabel lblMolecules;
+	private Component rigidArea_1;
+	private JPanel progPanel;
 	
 	class Task extends SwingWorker<AdjMatrix, Void> {
 		private SDFreader sdf;
@@ -89,7 +94,7 @@ public class Main extends JPanel {
 				}				
 				set.add(molec);
 				++cnt;
-				if (cnt == 80) break;
+				if (cnt == 120) break;
 			}
 			return new AdjMatrix(set, progressBar);
 		}
@@ -98,10 +103,12 @@ public class Main extends JPanel {
 			try {
 				adm = get();
 				final PairsModel pm;
+				
 				pm = new PairsModel(adm, norm);
 				String[] comboTransf = pm.comboTransf();
 				disp = new SideDisplay();
 				heat = new HeatMap(adm, true, disp, Gradient.GRADIENT_RED_TO_GREEN);
+				final PairsGraph pg = new PairsGraph(disp);
 				int CCcount = adm.getCCDoubleMatr().length;
 				final String comboDesc[] = new String[CCcount + 1];
 				comboDesc[0] = "Show all";
@@ -113,25 +120,41 @@ public class Main extends JPanel {
 				ptree = new PairsTree(heat, 0, norm);
 				initListeners();
 				
-				extra.remove(progressBar);
+				extra.remove(progPanel);
+				//extra.removeAll();
 				extra.add(heat);
+				extra.validate();
 				
 				class comboListener implements ActionListener {
-
+					
 					@Override
 					public void actionPerformed(ActionEvent e) {
 						JComboBox cb = (JComboBox)e.getSource();
 						if (e.getSource() == comboClustBox) {
 							int ind = cb.getSelectedIndex();
+							extra.removeAll();
+							clustInd = ind;
 							heat.updateMap(ind);
+							//pg.setVisible(false);
+							//heat.setVisible(true);
+							extra.add(heat);
 							comboTransfBox.setModel(new DefaultComboBoxModel
 									(pm.comboTransfClust(ind)));
-							//comboTransfBox.repaint();
-							Main.this.validate();
+							extra.repaint();
+							extra.validate();
 						}
-												
+						
+						if (e.getSource() == comboTransfBox) {
+							int ind = cb.getSelectedIndex();
+							pg.set(pm, clustInd, ind);
+							extra.removeAll();
+							extra.add(pg);
+							//extra.setVisible(true);
+							extra.repaint();
+							extra.validate();
+							//Main.this.validate();
+						}							
 					}
-					
 				}
 				
 				comboListener comboListener = new comboListener();
@@ -231,12 +254,21 @@ public class Main extends JPanel {
 		extra = new JPanel();
 		extra.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 		extra.setSize(new Dimension(1000, 1000));
+		
+//		rigidArea_1 = Box.createRigidArea(new Dimension(148, 147));
+//		extra.add(rigidArea_1);
+		progPanel = new JPanel();
+		progPanel.setLayout(new BorderLayout(0, 0));
 		progressBar = new JProgressBar(0, 100);
 		progressBar.setValue(0);
         progressBar.setStringPainted(true);
-        extra.add(progressBar);
+        progPanel.add(progressBar, BorderLayout.SOUTH);
+        extra.add(progPanel);
+        
+        lblMolecules = new JLabel("Molecules : " + sdf.sdfMap().size());
+        progPanel.add(lblMolecules, BorderLayout.NORTH);
         this.add(extra);
-		Task task = new Task(sdf);
+		task = new Task(sdf);
 		task.execute();		
 		}
 	

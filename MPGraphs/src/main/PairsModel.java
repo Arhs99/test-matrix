@@ -7,6 +7,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import org.openscience.cdk.CDKConstants;
@@ -22,8 +24,8 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
 
 public class PairsModel {
-	ArrayList<IAtomContainer> qArr;
-	ArrayList<IAtomContainer> tArr;
+	ArrayList<Molecule> qArr;
+	ArrayList<Molecule> tArr;
 	ArrayList<IAtomContainer> lArr;
 	ArrayList<IAtomContainer> rArr;
 	ArrayList<MolTransf> trArr;
@@ -31,7 +33,10 @@ public class PairsModel {
 	ArrayList<Double> tProp;
 	ArrayList<Double> dPArr;
 	ArrayList<Integer> clustArr;
+	ArrayList<Collection<Integer>> qHilArr;
+	ArrayList<Collection<Integer>> tHilArr;
 	int size;
+	double norm;
 	
 	Integer[] transfInd;
 	TreeMap<MolTransf, ArrayList<Integer>> transfFreq;
@@ -70,7 +75,7 @@ public class PairsModel {
         for (IBond bond : newBonds) atomContainer.addBond(bond);
     }
 	
-	private class MolTransf implements Comparable<MolTransf> {
+	public class MolTransf implements Comparable<MolTransf> {
 		private int direction;
 		private String left;
 		private String right;
@@ -193,6 +198,10 @@ public class PairsModel {
 		tProp = new ArrayList<>();
 		dPArr = new ArrayList<>();
 		clustArr = new ArrayList<>();
+		qHilArr = new ArrayList<>();
+		tHilArr = new ArrayList<>();
+		
+		this.norm = norm;
 				
 		for (int k = 0; k < adm.getCCSMSDMatr().length; ++k) {
 			if (adm.molVector()[k].length > 1) {
@@ -202,35 +211,22 @@ public class PairsModel {
 							continue;
 						}						
 						SMSDpair pair = (SMSDpair) adm.getCCSMSDMatr()[k].get(i, j);
-						IAtomContainer query = adm.molVector()[k][i].getMol();
+						Molecule query = adm.molVector()[k][i];
 						
 						double queryPot = adm.molVector()[k][i].getPotency();
 						
 						
-						IAtomContainer target = adm.molVector()[k][j].getMol();
+						Molecule target = adm.molVector()[k][j];
 						
 						double targetPot = adm.molVector()[k][j].getPotency();
 						
 						IAtomContainer queryBit = pair.pairDiff()[0];
 						IAtomContainer targetBit = pair.pairDiff()[1];
-						MolTransf mt = new MolTransf(queryBit, targetBit);
-
 						
-//						if (mt.getDirection() == -1) {
-//							IAtomContainer tac;
-//							tac = target;
-//							target = query;
-//							query = tac;
-//							
-//							tac = targetBit;
-//							targetBit = queryBit;
-//							queryBit = tac;
-//							
-//							Double temp;
-//							temp = targetPot;
-//							targetPot = queryPot;
-//							queryPot = temp;
-//						}
+						Collection<Integer> queryHi = pair.queryHi();
+						Collection<Integer> targetHi = pair.targetHi();
+						
+						MolTransf mt = new MolTransf(queryBit, targetBit);
 						
 						double dlnX = (DeltaP.logDiff(queryPot, targetPot, norm) == Double.MIN_VALUE ?
 								0 : DeltaP.logDiff(queryPot, targetPot, norm));
@@ -244,6 +240,8 @@ public class PairsModel {
 						trArr.add(mt);
 						clustArr.add(k + 1);
 						dPArr.add(dlnX);
+						qHilArr.add(queryHi);
+						tHilArr.add(targetHi);
 					}
 				}				
 			}
@@ -263,46 +261,7 @@ public class PairsModel {
 			
 		});
 		
-//		final HashMap<MolTransf, ArrayList<Integer>> hash = new HashMap<>(); // hashtable of pair , Array of indexes
-//			for (int i = 0; i < transfInd.length; ++i) {				
-//				ArrayList<Integer> keys = hash.get(trArr.get(i));
-//				if (keys == null) {
-//					keys = new ArrayList<>();
-//				}
-//				keys.add(i);
-//				hash.put(trArr.get(i), keys);
-//				
-//				MolTransf inv = trArr.get(i).invPair();		//insert the inverse transforms too
-//				keys = hash.get(inv);
-//				if (keys == null) {
-//					keys = new ArrayList<>();
-//				}
-//				keys.add(i);
-//				hash.put(inv, keys);			
-//			}
-//		// tree to store previous table in order of frequency of key transformation
-//		transfFreq = new TreeMap<>(new Comparator<MolTransf>() {
-//			
-//			@Override
-//			public int compare(MolTransf o1, MolTransf o2) {
-//				if (hash.get(o1).size() < hash.get(o2).size()) {
-//					return 1;
-//				} else if (hash.get(o1).size() > hash.get(o2).size()) {
-//					return -1;
-//				} else {
-//					return o1.compareTo(o2);
-//				}
-//			}
-//			
-//		});		
-//		transfFreq.putAll(hash);
-		
 		transfFreq = transfMap(transfInd);
-		
-//		for (int i = 0; i < hash.size(); ++i) {
-//			MolTransf mt = (MolTransf) hash.keySet().toArray()[i];
-//			int freq = transfFreq.get(mt).size();
-//		}
 		
 	}
 	
@@ -362,9 +321,8 @@ public class PairsModel {
 	 * @param n	cluster number (1 to ) n=0 for all clusters
 	 * @return
 	 */
-	public String[] comboTransfClust(int n) {
-		if (n == 0) return comboTransf();
-		
+	public TreeMap<MolTransf, ArrayList<Integer>> TransfClustMap(int n) {
+		if (n == 0) return transfFreq;
 		ArrayList<Integer> arr = new ArrayList<>();
 		for (int i = 0; i < clustArr.size(); i++) {
 			if (clustArr.get(i) == n) {
@@ -374,28 +332,20 @@ public class PairsModel {
 		
 		TreeMap<MolTransf, ArrayList<Integer>> temp =
 				transfMap( arr.toArray(new Integer[arr.size()]));
+		return temp;		
+	}
+	
+	
+	public String[] comboTransfClust(int n) {
+		 TreeMap<MolTransf, ArrayList<Integer>> temp = TransfClustMap(n);
 		
-//		TreeMap<MolTransf, ArrayList<Integer>> temp = new TreeMap<>(transfFreq);
-//		for (MolTransf mt : temp.keySet()) {
-//			ArrayList<Integer> keys = temp.get(mt);
-//			for (Integer i : keys) {
-//				if (clustArr.get(i) != n) {
-//					keys.remove(i);
-//				}	
-//			}
-//			if (keys.isEmpty()) {
-//				temp.remove(mt);
-//			}
-//		}
 		String[] st = new String[temp.size()];
 		for (int i = 0; i < st.length; ++i) {
 			MolTransf mt = (MolTransf) temp.keySet().toArray()[i];
 			int freq = temp.get(mt).size();
 			st[i] = mt + " (" + freq + ")";
-		}
-		
-		return st;
-		
+		}		
+		return st;		
 	}
 	
 	public void printPairTansf() {
@@ -410,6 +360,54 @@ public class PairsModel {
 		return size;
 	}
 	
+	public ArrayList<Molecule> getqArr() {
+		return qArr;
+	}
+
+	public ArrayList<Molecule> gettArr() {
+		return tArr;
+	}
+
+	public ArrayList<IAtomContainer> getlArr() {
+		return lArr;
+	}
+
+	public ArrayList<IAtomContainer> getrArr() {
+		return rArr;
+	}
+
+	public ArrayList<MolTransf> getTrArr() {
+		return trArr;
+	}
+
+	public ArrayList<Double> getqProp() {
+		return qProp;
+	}
+
+	public ArrayList<Double> gettProp() {
+		return tProp;
+	}
+
+	public ArrayList<Double> getdPArr() {
+		return dPArr;
+	}
+
+	public ArrayList<Integer> getClustArr() {
+		return clustArr;
+	}
+
+	public double getNorm() {
+		return norm;
+	}
+
+	public ArrayList<Collection<Integer>> getqHilArr() {
+		return qHilArr;
+	}
+
+	public ArrayList<Collection<Integer>> gettHilArr() {
+		return tHilArr;
+	}
+
 	public static void main(String[] args) {
 		
 	}

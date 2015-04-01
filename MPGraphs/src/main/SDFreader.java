@@ -99,7 +99,7 @@ public class SDFreader {
 	}
 	
 	/**
-	 * Returns a map of key = IMolecule and value = a set of fields from the sdf in text form
+	 * Returns a map of key = IAtomContainer and value = a set of fields from the sdf in text form
 	 * original order in sdf is not respected
 	 * @return
 	 */
