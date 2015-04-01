@@ -882,8 +882,6 @@ public class HeatMap extends JPanel {
 			this.heat = heat;
 		}
 		public void mouseClicked(MouseEvent e) {
-//			Point p = e.getPoint();
-//			System.out.println(e.getSource().getClass().getName());
 		}
 		
 		public void mouseMoved(MouseEvent e) {

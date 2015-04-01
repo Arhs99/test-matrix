@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Paint;
+import java.awt.geom.Point2D;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeSet;
@@ -24,6 +25,7 @@ import org.openscience.smsd.tools.ExtAtomContainerManipulator;
 import edu.uci.ics.jung.algorithms.layout.CircleLayout;
 import edu.uci.ics.jung.algorithms.layout.FRLayout;
 import edu.uci.ics.jung.algorithms.layout.Layout;
+import edu.uci.ics.jung.algorithms.layout.StaticLayout;
 import edu.uci.ics.jung.algorithms.matrix.GraphMatrixOperations;
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.UndirectedSparseGraph;
@@ -39,22 +41,6 @@ public class TestGraph {
 	 */
 	public static void main(String[] args) throws Exception {
 		String file = args[0];
-//		Scanner sc = new Scanner(new BufferedReader(new FileReader(file)));
-//		double[][] arr = new double[243][243];
-//		
-//		int i = 0;
-//		int j = 0;
-//		while (sc.hasNext()) {
-//			String s = sc.next();
-//			double r = s == "NaN"? 0.0 : Double.parseDouble(s);
-//			arr[i][j] = r;
-//			++j;
-//			if (j == 243) {
-//				j = 0;
-//				++i;
-//			}
-//		}
-
 		SDFreader sdf = new SDFreader(file);
 		final Color[] colors = Gradient.GRADIENT_RED_TO_GREEN;
 		TreeSet<Molecule> map = new TreeSet<>();
@@ -98,10 +84,20 @@ public class TestGraph {
 
 				final AdjMatrix adm = new AdjMatrix(map);
 				//				DenseDoubleMatrix2D matrix = new DenseDoubleMatrix2D(arr);
-				Graph<? extends Object, ? extends Object> g = 
+				Graph<Integer, Number> g = 
 						GraphMatrixOperations .matrixToGraph(adm.getConnMatrix(), graphFactory,
 								vertexFactory, edgeFactory, wtMap);
-				Layout<Integer, Number> layout = new FRLayout(g);
+				//Layout<Integer, Number> layout = new FRLayout(g);
+				Layout<Integer, Number> layout = new StaticLayout<Integer, Number>(g, new Transformer<Integer,Point2D>() {
+					public Point2D transform(Integer v) {
+						Double x = 50.0 * v;
+						Double y = 10 * Math.min(100, adm.getMolArray()[v].getPotency());
+						return new Point2D.Double(x, y);
+					}
+				});
+				
+				
+				
 				layout.setSize(new Dimension(800,800));
 				final VisualizationViewer<Integer,Number> vv = 
 						new VisualizationViewer<Integer,Number>(layout) {

@@ -86,8 +86,8 @@ public class PairsTree extends JPanel {
 		
 		FRLayout<Integer,Integer> flayout = new FRLayout<Integer, Integer>(graph);
         flayout.setMaxIterations(100);
-        flayout.setInitializer(new RandomLocationTransformer<Integer>(new Dimension(1200, 800), 0));
-        flayout.setSize(new Dimension(1200, 800));
+        flayout.setInitializer(new RandomLocationTransformer<Integer>(new Dimension(1200, 1000), 0));
+        flayout.setSize(new Dimension(1200, 1000));
         vv = new VisualizationViewer<>(flayout, new Dimension(1200, 900));
 		
 //		radialLayout = new RadialTreeLayout<Integer,Integer>(graph, 250, 250);//, 900, 900);
