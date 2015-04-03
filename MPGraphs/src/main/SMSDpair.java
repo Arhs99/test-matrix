@@ -1,4 +1,5 @@
 package main;
+import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -7,14 +8,18 @@ import java.util.Map.Entry;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.layout.StructureDiagramGenerator;
 import org.openscience.cdk.smiles.SmilesGenerator;
 import org.openscience.cdk.smiles.SmilesParser;
+import org.openscience.smsd.AtomAtomMapping;
 import org.openscience.smsd.Isomorphism;
+import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.smsd.interfaces.Algorithm;
 import org.openscience.smsd.tools.ExtAtomContainerManipulator;
 
@@ -23,17 +28,19 @@ import viewer.StructureDisplay;
 
 
 public final class SMSDpair{
-	private final IAtomContainer query;
-	private final IAtomContainer target;
+	private IAtomContainer query = new AtomContainer();
+	private IAtomContainer target = new AtomContainer();
 	private final Isomorphism smsd;
 	private Collection<Integer> queryHL;
 	private Collection<Integer> targetHL;
+	private AtomAtomMapping atMapping;
+	private ArrayList<Integer> qryConnAtom;
+	private ArrayList<Integer> trgConnAtom;
 	private SmilesGenerator sg = SmilesGenerator.absolute().aromatic(); 
 	
 	public SMSDpair(IAtomContainer mol1, IAtomContainer mol2) throws CDKException, CloneNotSupportedException {
 
-		this.query = mol1.clone();
-		this.target = mol2.clone();
+		
 		
 		
 		ExtAtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol1);
@@ -45,30 +52,54 @@ public final class SMSDpair{
 		smsd = new Isomorphism(mol1, mol2, Algorithm.DEFAULT, true, true, true);
 		smsd.setChemFilters(true, true, true);
 		
+		if (smsd != null) {
+			this.query = smsd.getQuery();
+			this.target = smsd.getTarget();
 		
+		atMapping = smsd.getFirstAtomMapping();
+		//atMapping = smsd.getAllAtomMapping().get(0);
 		
 		queryHL = new HashSet<>();
-		for (int i = 0; i < smsd.getQuery().getAtomCount(); ++i) {
-			if (!smsd.getFirstAtomMapping().getMappingsByIndex().keySet().contains(i)) {
+		for (int i = 0; i < query.getAtomCount(); ++i) {
+			if (! atMapping.getMappingsByIndex().keySet().contains(i)) {
 				queryHL.add(i);
 			}
 		}
 		targetHL = new HashSet<>();
-		for (int i = 0; i < smsd.getTarget().getAtomCount(); ++i) {
-			if (!smsd.getFirstAtomMapping().getMappingsByIndex().values().contains(i)) {
+		for (int i = 0; i < target.getAtomCount(); ++i) {
+			if (!atMapping.getMappingsByIndex().values().contains(i)) {
 				targetHL.add(i);
 			}
 		}
 		
+		qryConnAtom = new ArrayList<>();
+		for (int i : atMapping.getMappingsByIndex().keySet()) {
+			for (int j : queryHi()) {
+				if (query.getBond(query.getAtom(i), query.getAtom(j)) != null) {
+					qryConnAtom.add(i);
+				}
+			}
+		}
+		
+		trgConnAtom = new ArrayList<>();
+		for (int i : atMapping.getMappingsByIndex().values()) {
+			for (int j : targetHi()) {
+				if (target.getBond(target.getAtom(i), target.getAtom(j)) != null) {
+					trgConnAtom.add(i);
+				}
+			}
+		}
+		}
+		
 	}
 	public IAtomContainer rxnmol() {
-		//return smsd.getQuery();
-		return query;
+		return smsd.getQuery();
+		//return query;
 	}
 
 	public IAtomContainer prdmol() {
-		//return smsd.getTarget();
-		return target;
+		return smsd.getTarget();
+		//return target;
 	}
 	
 	/**
@@ -150,23 +181,38 @@ public final class SMSDpair{
 	public Isomorphism getSMSD() {
 		return smsd;
 	}
+	
+	public ArrayList<Integer> getQryConnAtom() {
+		return qryConnAtom;
+	}
+	public ArrayList<Integer> getTrgConnAtom() {
+		return trgConnAtom;
+	}
+	
 	public static void main(String[] args) throws Exception {
 
 		SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
-		IAtomContainer mol1 = sp.parseSmiles(args[0]);
-		IAtomContainer mol2 = sp.parseSmiles(args[1]);
-
+		IAtomContainer mol1 = sp.parseSmiles("[H]O[C@](C([H])([H])[H])(C([H])([H])C([H])([H])[H])C([H])([H])C([H])([H])C([H])([H])[H]"); //(args[0]);
+		IAtomContainer mol2 = sp.parseSmiles("[H]O[C@](C([H])([H])[H])(C([H])([H])C([H])([H])C([H])([H])[H])C([H])([H])C([H])([H])[H]"); //(args[1]);
+		StructureDiagramGenerator sdg = new StructureDiagramGenerator();
+        sdg.setMolecule(mol1.clone());
+		sdg.generateCoordinates();
+        mol1 = sdg.getMolecule();
+        sdg.setMolecule(mol2.clone());
+		sdg.generateCoordinates();
+        mol2 = sdg.getMolecule();
 		SMSDpair mcsp = new SMSDpair(mol1, mol2);
 		
 		JPanel panel = new JPanel();
-		StructureDisplay tdp1 = new StructureDisplay();//(mcsp.query);
+		panel.setPreferredSize(new Dimension(1500, 600));
+		StructureDisplay tdp1 = new StructureDisplay(mcsp.rxnmol());//(mcsp.query);
 		panel.add(tdp1);
 		StructureDisplay tdp2 = new StructureDisplay(mcsp.target);
 		panel.add(tdp2);
-		StructureDisplay tdp3 = new StructureDisplay(mcsp.pairDiff()[0]);
+		StructureDisplay tdp3 = new StructureDisplay(mcsp.getSMSD().getQuery());// pairDiff()[0]);
 		//tdp1.highlightSelect(mcsp.queryHi()); //keyset for query molecule
 		panel.add(tdp3);
-		StructureDisplay tdp4 = new StructureDisplay(mcsp.pairDiff()[1]);
+		StructureDisplay tdp4 = new StructureDisplay(mcsp.getSMSD().getTarget()); //pairDiff()[1]);
 		tdp2.highlightSelect(mcsp.targetHi()); //values for target molecule
 		panel.add(tdp4);
 		
@@ -174,7 +220,7 @@ public final class SMSDpair{
 
 		final JFrame f = new JFrame("Test");
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		f.setSize(1500, 1200);
+		f.getContentPane().setPreferredSize(new Dimension(1500, 600));
 		f.getContentPane().add(panel);
 
 		javax.swing.SwingUtilities.invokeLater(new Runnable() {

@@ -52,6 +52,10 @@ public class TestSelection extends JPanel {
 		this.addMouseListener(listener);
 		this.addMouseMotionListener(listener);
 		rm = renderer.getRenderer2DModel();
+		rm.set(StandardGenerator.Highlighting.class,
+                StandardGenerator.HighlightStyle.OuterGlow);
+		rm.set(StandardGenerator.OuterGlowWidth.class,
+                4d);
 		rm.set(StandardGenerator.Visibility.class, SelectionVisibility.all
 				(SymbolVisibility.iupacRecommendationsWithoutTerminalCarbon()));
 //		for (IAtom atom : mol.atoms()) {	// this is for labelling atoms
@@ -76,7 +80,7 @@ public class TestSelection extends JPanel {
 			Point p = e.getPoint();
 			Point2d modelPoint = renderer.toModelCoordinates(p.getX(), p.getY());
 			IAtom atom = GeometryUtil.getClosestAtom(modelPoint.getX(), modelPoint.getY(), mol);
-			System.out.println(atom);
+			System.out.println(mol.getAtomNumber(atom));
 			System.out.println(atom.getPoint2d() + " " + modelPoint);
 			System.out.println(atom.getPoint2d().distance(modelPoint));
 		}
@@ -93,12 +97,10 @@ public class TestSelection extends JPanel {
 					return;
 				}
 				if (atomSel != null) {
-					//atomSel.setProperty(StandardGenerator.HIGHLIGHT_COLOR, NO_HIL);
 					atomSel.removeProperty(StandardGenerator.HIGHLIGHT_COLOR);
 					atomSel = null;
 				}
 				if (bondSel != null) {
-					//bondSel.setProperty(StandardGenerator.HIGHLIGHT_COLOR, NO_HIL);
 					bondSel.removeProperty(StandardGenerator.HIGHLIGHT_COLOR);
 					bondSel = null;
 				}
