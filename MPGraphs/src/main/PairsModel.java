@@ -6,10 +6,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.exception.CDKException;
@@ -40,6 +42,7 @@ public class PairsModel {
 	
 	Integer[] transfInd;
 	TreeMap<MolTransf, ArrayList<Integer>> transfFreq;
+	private AdjMatrix adm;
 	
     /**
      * Adds explicit hydrogens (without coordinates) to the IAtomContainer,
@@ -189,6 +192,7 @@ public class PairsModel {
 	}
 	
 	public PairsModel(AdjMatrix adm, double norm) throws Exception {
+		this.adm = adm;
 		qArr = new ArrayList<>();
 		tArr = new ArrayList<>();
 		lArr = new ArrayList<>();
@@ -212,13 +216,32 @@ public class PairsModel {
 						}						
 						SMSDpair pair = (SMSDpair) adm.getCCSMSDMatr()[k].get(i, j);
 						Molecule query = adm.molVector()[k][i];
-						
-						double queryPot = adm.molVector()[k][i].getPotency();
-						
+						MolClustPair qpair = new MolClustPair(i, k);												
+						double queryPot = adm.molVector()[k][i].getPotency();						
 						
 						Molecule target = adm.molVector()[k][j];
-						
+						MolClustPair tpair = new MolClustPair(i, j);
 						double targetPot = adm.molVector()[k][j].getPotency();
+						
+						for (int key : pair.getQryConnAtom()) {
+							Set<MolClustPair> set = query.getAtomMapping().get(key);
+							if (set == null) {
+								set = new TreeSet<MolClustPair>();
+							}
+							
+							set.add(qpair);
+							query.getAtomMapping().put(key, set);  
+						}
+						
+						for (int key : pair.getTrgConnAtom()) {
+							Set<MolClustPair> set = target.getAtomMapping().get(key);
+							if (set == null) {
+								set = new TreeSet<MolClustPair>();
+							}
+							
+							set.add(tpair);
+							target.getAtomMapping().put(key, set);  
+						}
 						
 						IAtomContainer queryBit = pair.pairDiff()[0];
 						IAtomContainer targetBit = pair.pairDiff()[1];
@@ -354,6 +377,10 @@ public class PairsModel {
 		System.out.println();
 		for (String s : comboTransfClust(1))
 			System.out.println(s);
+	}
+	
+	public AdjMatrix getAdm() {
+		return adm;
 	}
 	
 	public int size() {

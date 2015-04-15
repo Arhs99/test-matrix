@@ -1,84 +1,66 @@
-package viewer;
+package testing;
 
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.GridLayout;
 import java.awt.Paint;
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.Stroke;
-import java.awt.geom.RoundRectangle2D;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeSet;
+import java.util.Set;
 
-import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.JComboBox;
-import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import main.AdjMatrix;
-import main.Gradient;
+import main.DeltaP;
+import main.MolClustPair;
 import main.Molecule;
-import main.SDFreader;
+import main.PairsModel;
 import main.SMSDpair;
 
 import org.apache.commons.collections15.Factory;
 import org.apache.commons.collections15.Transformer;
-import org.apache.commons.collections15.functors.ConstantTransformer;
-import org.openscience.cdk.interfaces.IAtomContainer;
-import org.openscience.smsd.tools.ExtAtomContainerManipulator;
+
+import viewer.StructureDisplay;
 
 import edu.uci.ics.jung.algorithms.layout.FRLayout;
-import edu.uci.ics.jung.algorithms.layout.RadialTreeLayout;
 import edu.uci.ics.jung.algorithms.layout.util.RandomLocationTransformer;
 import edu.uci.ics.jung.graph.DelegateTree;
-import edu.uci.ics.jung.samples.ShortestPathDemo.MyEdgeStrokeFunction;
-import edu.uci.ics.jung.samples.VertexImageShaperDemo.DemoVertexIconShapeTransformer;
-import edu.uci.ics.jung.visualization.GraphZoomScrollPane;
-import edu.uci.ics.jung.visualization.RenderContext;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 import edu.uci.ics.jung.visualization.control.DefaultModalGraphMouse;
 import edu.uci.ics.jung.visualization.control.ModalGraphMouse;
 import edu.uci.ics.jung.visualization.decorators.DefaultVertexIconTransformer;
 import edu.uci.ics.jung.visualization.decorators.EdgeShape;
-import edu.uci.ics.jung.visualization.decorators.EllipseVertexShapeTransformer;
-import edu.uci.ics.jung.visualization.decorators.VertexIconShapeTransformer;
 
-@SuppressWarnings("serial")
-public class PairsTree extends JPanel {
+public class TestSiteSub extends JPanel {
 	Factory<Integer> edgeFactory;
-		
-		
+	
+	
 	private DelegateTree<Integer, Integer> graph;
 	private VisualizationViewer<Integer, Integer> vv;
 	private static final int ICON_WIDTH = 180;
 	private static final int ICON_HEIGHT = 180;
-	//private TreeLayout<Integer, Integer> layout;
-	//private RadialTreeLayout<Integer,Integer> radialLayout;
 	private Map<Integer,Icon> iconMap;
 	private Map<Integer, Double> edgeMap;
-	private HeatMap heat;
-	//private AdjMatrix adm;
+	private PairsModel pm;
 	private int molIndex;
 	private double norm;
+
+
+	private int clust;
 	
-	public PairsTree(HeatMap heat, int molIndex, double norm) throws Exception {
-		this.heat = heat;
+	public TestSiteSub(PairsModel pm) throws Exception {
 		edgeFactory = new Factory<Integer>() {
 			int i=0;
 			public Integer create() {
 				return i++;
 			}};
-		//this.adm = adm;
-		this.norm = norm;
-		this.molIndex = molIndex;
+		this.pm = pm;
 		graph = new DelegateTree<Integer, Integer>();
 		iconMap = new HashMap<>();
 		edgeMap = new HashMap<>();
@@ -90,9 +72,6 @@ public class PairsTree extends JPanel {
         flayout.setSize(new Dimension(1200, 800));
         vv = new VisualizationViewer<>(flayout, new Dimension(1200, 900));
 		
-//		radialLayout = new RadialTreeLayout<Integer,Integer>(graph, 250, 250);//, 900, 900);
-//        radialLayout.setSize(new Dimension(1200, 900));
-//        vv =  new VisualizationViewer<Integer,Integer>(radialLayout, new Dimension(1200, 900));
         
         vv.setBackground(Color.white);
         vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.QuadCurve<Integer, Integer>());
@@ -101,13 +80,9 @@ public class PairsTree extends JPanel {
         vv.getRenderContext().setArrowFillPaintTransformer(new EdgeColor());// ConstantTransformer(Color.lightGray));
         vv.getRenderContext().setArrowDrawPaintTransformer(new EdgeColor());//ConstantTransformer(Color.black));
         
-//        VertexIconShapeTransformer<Integer> vertexIconShapeTransformer =
-//                new VertexIconShapeTransformer<Integer>(new EllipseVertexShapeTransformer<Integer>());
-//        vertexIconShapeTransformer.setIconMap(iconMap);
         vv.getRenderContext().setVertexShapeTransformer(new Transformer<Integer, Shape>() {
 			@Override
 			public Shape transform(Integer arg0) {
-				// TODO Auto-generated method stub
 				return new Rectangle(ICON_WIDTH - 5, ICON_HEIGHT - 5);
 			}
         	
@@ -134,32 +109,25 @@ public class PairsTree extends JPanel {
         this.add(controls, BorderLayout.SOUTH);
 	}
 	
-	public void setMolIndex(int molIndex) throws Exception {	//modi
+	public void setMolIndex(int molIndex, int clust) throws Exception {	//modi
 		edgeFactory = new Factory<Integer>() {
 			int i=0;
 			public Integer create() {
 				return i++;
 			}};
 		this.molIndex = molIndex;
+		this.clust = clust;
 		this.graph = new DelegateTree<Integer, Integer>();
 		this.iconMap = new HashMap<>();
 		this.edgeMap = new HashMap<>();
 		createTree();
-		
-//		this.radialLayout = new RadialTreeLayout<Integer,Integer>(graph, 250, 250);
-//		radialLayout.setSize(new Dimension(1200, 900));
-//		vv.setGraphLayout(radialLayout);
+	
 		
 		FRLayout<Integer,Integer> flayout = new FRLayout<Integer, Integer>(graph);
         flayout.setMaxIterations(100);
         flayout.setInitializer(new RandomLocationTransformer<Integer>(new Dimension(1200, 800), 0));
         flayout.setSize(new Dimension(1200, 800));
         vv.setGraphLayout(flayout);
-		
-//	VertexIconShapeTransformer<Integer> vertexIconShapeTransformer =
-//                new VertexIconShapeTransformer<Integer>(new EllipseVertexShapeTransformer<Integer>());
-//        vertexIconShapeTransformer.setIconMap(iconMap);
-//        vv.getRenderContext().setVertexShapeTransformer(vertexIconShapeTransformer);
 		
 		vv.getRenderContext().setVertexShapeTransformer(new Transformer<Integer, Shape>() {
 			@Override
@@ -221,9 +189,8 @@ public class PairsTree extends JPanel {
 
 	}
 	
-	private void createTree() throws Exception {
-		Molecule rootMol = heat.getMolArray()[molIndex];
-		 
+	private void createTree() throws Exception {		
+		Molecule rootMol = pm.getAdm().molVector()[clust][molIndex];		 
 		StructureDisplay sd = new StructureDisplay(rootMol.getMol());
 		String fieldStr = rootMol.getFieldName().substring(0, 10); // show only 10 first chars of field name
 		iconMap.put(0, sd.getIcon(ICON_WIDTH, ICON_HEIGHT, null,
@@ -231,88 +198,41 @@ public class PairsTree extends JPanel {
 		graph.setRoot(0);
 		
 		int childNum = 1;
-		for (int i = 0; i < heat.getMCSArr()[molIndex].length; ++i) {
-			if (heat.getMCSArr()[i][molIndex] != null) {
-				SMSDpair pair = (SMSDpair) heat.getMCSArr()[i][molIndex];
-				Molecule mol = heat.getMolArray()[i];
-				sd = new StructureDisplay(mol.getMol());
-				double dP = heat.getData()[i][molIndex];
-				Color col;
-				if (dP > 1) {
-					col = Color.green;
-				} else if (dP < -1) {
-					col = Color.red;
-				} else {
-					col = Color.gray;
+		Map<Integer, Set<MolClustPair>> map = rootMol.getAtomMapping();
+		//if (map.isEmpty()) return;
+		for (int i : map.keySet()) {
+				Set<MolClustPair> clustMap = map.get(i);
+				for (MolClustPair mcPair : clustMap) {
+					SMSDpair pair = (SMSDpair) pm.getAdm().getCCSMSDMatr()[mcPair.clust()].get(
+							molIndex, mcPair.atom());
+					Molecule mol = pm.getAdm().molVector()[mcPair.clust()][mcPair.atom()];
+					sd = new StructureDisplay(mol.getMol());
+					double dP = (DeltaP.logDiff(rootMol.getPotency(), mol.getPotency(), norm) == Double.MIN_VALUE ?
+							0 : DeltaP.logDiff(mol.getPotency(), rootMol.getPotency(), norm));
+					Color col;
+					if (dP > 1) {
+						col = Color.green;
+					} else if (dP < -1) {
+						col = Color.red;
+					} else {
+						col = Color.gray;
+					}
+					Collection<Integer> highL = mcPair.atom() > molIndex ? pair.targetHi() : pair.queryHi();
+					iconMap.put(childNum, sd.getIcon(ICON_WIDTH, ICON_HEIGHT,
+							highL, mol.getPotency(), col, fieldStr, mol.getMolID()));
+					graph.addEdge(edgeFactory.create(), 0, childNum);	
+					edgeMap.put(childNum - 1, dP);		// edge numbering has to start from 0
+					++childNum;
 				}
-				Collection<Integer> highL = i > molIndex ? pair.targetHi() : pair.queryHi();
-				iconMap.put(childNum, sd.getIcon(ICON_WIDTH, ICON_HEIGHT,
-						highL, mol.getPotency(), col, fieldStr, mol.getMolID()));
-				graph.addEdge(edgeFactory.create(), 0, childNum);	
-				edgeMap.put(childNum - 1, dP);		// edge numbering has to start from 0
-				++childNum;
+				
 			}
 		}
-	}
-	
-	   public static void main(String[] args) throws Exception {
-		   String file = args[0];
-		   SDFreader sdf = new SDFreader(file);
-		   TreeSet<Molecule> map = new TreeSet<>();
-			//HashMap<Integer, Icon> map = new HashMap<>();
-			int cnt = 0;
-			for (IAtomContainer mol : sdf.sdfMap().keySet()) {
-				//StructureDiagramGenerator sdg = new StructureDiagramGenerator();
-//		        sdg.setMolecule(mol.clone());
-//				sdg.generateCoordinates();
-//		        mol = sdg.getMolecule();
-//				StructureDisplay sd = new StructureDisplay(mol);
-//				map.put(cnt, sd.getIcon(200, 200));
-				//++cnt;
-				String s = "Rfms Ic50 Um Hpad4 Avg";
-				String val = sdf.sdfMap().get(mol)[1]; 	// index of field is 0
-				if (val == null || mol.getAtomCount() == 0) {
-					continue;
-				}
-				ExtAtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol);
-				mol = ExtAtomContainerManipulator.removeHydrogens(mol);
-				ExtAtomContainerManipulator.aromatizeCDK(mol);
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
 
-				Molecule molec = new Molecule(mol, Double.parseDouble(val), s);
-				map.add(molec);
-				++cnt;
-				if (cnt == 10) break;
-			}
-			AdjMatrix adm = new AdjMatrix(map);
-			SideDisplay disp = new SideDisplay();
-			HeatMap heat = new HeatMap(adm, true, disp, Gradient.GRADIENT_RED_TO_GREEN);
-			
-			int molIndex = 0;
-			int j = 0;
-			int max = 0;
-			ArrayList<SMSDpair> arr = new ArrayList<>();
-			while (j < adm.getMCSMatrix().toArray().length) {
-			Object[] smsdArr = adm.getMCSMatrix().toArray()[j];
-			for (Object pair : smsdArr) {
-				if (pair != null) {
-					arr.add((SMSDpair) pair);
-				}
-			}
-			if (arr.size() > max){
-				max = arr.size();
-				molIndex = j;
-			}
-			++j;
-			}
-			
-			
-		   JFrame frame = new JFrame();
-	        Container content = frame.getContentPane();
-	        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	        PairsTree pt = new PairsTree(heat, 0, 100);
-	        pt.setMolIndex(molIndex);
-	        content.add(pt);
-	        frame.pack();
-	        frame.setVisible(true);
-			}
+	}
+
 }
