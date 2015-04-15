@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Paint;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -27,6 +28,7 @@ import main.PairsModel.MolTransf;
 
 import org.apache.commons.collections15.Factory;
 import org.apache.commons.collections15.Transformer;
+import org.apache.commons.collections15.functors.ConstantTransformer;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.smsd.tools.ExtAtomContainerManipulator;
 
@@ -103,6 +105,8 @@ public class PairsGraph  extends JPanel {
 		vv.setGraphLayout(layout);
 		ToolTipManager.sharedInstance().setReshowDelay(0);
 		ToolTipManager.sharedInstance().setInitialDelay(0);
+		vv.getRenderContext().setVertexShapeTransformer(
+        		new ConstantTransformer(new Rectangle2D.Float(-6,-6,12,12)));
 		vv.setVertexToolTipTransformer(new Transformer<Integer, String>() {
 			
 			@Override

@@ -182,9 +182,16 @@ public final class SMSDpair{
 		return smsd;
 	}
 	
+	/**
+	 * @return array of indices of connection atoms in query AtomContainer
+	 */
 	public ArrayList<Integer> getQryConnAtom() {
 		return qryConnAtom;
 	}
+	
+	/**
+	 * @return array of indices of connection atoms in target AtomContainer
+	 */
 	public ArrayList<Integer> getTrgConnAtom() {
 		return trgConnAtom;
 	}
