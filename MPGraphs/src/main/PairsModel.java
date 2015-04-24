@@ -215,33 +215,11 @@ public class PairsModel {
 							continue;
 						}						
 						SMSDpair pair = (SMSDpair) adm.getCCSMSDMatr()[k].get(i, j);
-						Molecule query = adm.molVector()[k][i];
-						MolClustPair qpair = new MolClustPair(i, k);												
+						Molecule query = adm.molVector()[k][i];												
 						double queryPot = adm.molVector()[k][i].getPotency();						
 						
 						Molecule target = adm.molVector()[k][j];
-						MolClustPair tpair = new MolClustPair(i, j);
 						double targetPot = adm.molVector()[k][j].getPotency();
-						
-						for (int key : pair.getQryConnAtom()) {
-							Set<MolClustPair> set = query.getAtomMapping().get(key);
-							if (set == null) {
-								set = new TreeSet<MolClustPair>();
-							}
-							
-							set.add(qpair);
-							query.getAtomMapping().put(key, set);  
-						}
-						
-						for (int key : pair.getTrgConnAtom()) {
-							Set<MolClustPair> set = target.getAtomMapping().get(key);
-							if (set == null) {
-								set = new TreeSet<MolClustPair>();
-							}
-							
-							set.add(tpair);
-							target.getAtomMapping().put(key, set);  
-						}
 						
 						IAtomContainer queryBit = pair.pairDiff()[0];
 						IAtomContainer targetBit = pair.pairDiff()[1];

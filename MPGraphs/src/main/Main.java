@@ -29,6 +29,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.SoftBevelBorder;
@@ -44,6 +45,7 @@ import viewer.PairsGraph;
 import viewer.PairsTree;
 import viewer.SDFDialogue;
 import viewer.SideDisplay;
+import viewer.SubGrid;
 
 public class Main extends JPanel {
 	private AdjMatrix adm;
@@ -62,6 +64,7 @@ public class Main extends JPanel {
 	private JLabel lblMolecules;
 	private Component rigidArea_1;
 	private JPanel progPanel;
+	private SubGrid sub;
 	
 	class Task extends SwingWorker<AdjMatrix, Void> {
 		private SDFreader sdf;
@@ -94,7 +97,7 @@ public class Main extends JPanel {
 				}				
 				set.add(molec);
 				++cnt;
-				if (cnt == 80) break;
+				if (cnt == 120) break;
 			}
 			return new AdjMatrix(set, progressBar);
 		}
@@ -103,6 +106,7 @@ public class Main extends JPanel {
 			try {
 				adm = get();
 				final PairsModel pm;
+				sub = new SubGrid(adm);
 				
 				pm = new PairsModel(adm, norm);
 				String[] comboTransf = pm.comboTransf();
@@ -201,11 +205,21 @@ public class Main extends JPanel {
 	private void initListeners() {
 		ptree.getVViewer().addMouseListener(new MouseInputAdapter() {
 			public void mouseClicked(MouseEvent e) {
-				//System.out.println(e.getSource() + " " + ptree.getVViewer().hashCode());
 				extra.remove(ptree);
 				extra.add(heat);
 				disp.setVisible(true);
 				extra.validate();
+			}
+		});
+		
+		sub.returnPanel().addMouseListener(new MouseInputAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				if (sub.isVisible()) {
+					extra.remove(sub);
+					extra.add(heat);
+					disp.setVisible(true);
+					extra.validate();
+				}
 			}
 		});
 		
@@ -228,6 +242,7 @@ public class Main extends JPanel {
 				Point p = e.getPoint();
 				int mouseY = dataY(p);
 				if (mouseY > 0 && mouseY <= heat.getData().length) {
+					if (SwingUtilities.isLeftMouseButton(e)) {
 					try {
 						ptree.setMolIndex(mouseY - 1);
 						extra.remove(heat);
@@ -239,8 +254,23 @@ public class Main extends JPanel {
 						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
+					} else if (SwingUtilities.isRightMouseButton(e)) {
+						int mainInd = heat.getMolArray()[mouseY - 1].getIndex();
+						if (mainInd > -1) {
+						try {
+							sub.setIndex(mainInd, 1);
+							extra.remove(heat);
+							disp.setVisible(false);
+							extra.add(sub);
+						} catch (Exception e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+					}
+					}
 				}
 			}
+			
 		});
 		
 	}
