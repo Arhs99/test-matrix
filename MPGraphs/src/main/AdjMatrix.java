@@ -105,7 +105,6 @@ public class AdjMatrix {
 			if (progressBar != null) {
 				progressBar.setValue(100 * (i + 1) / arr.length);
 				System.out.println(100 * (i + 1) / arr.length);
-				//progressBar.repaint();
 			}
 			for (int j = i+1; j < arr.length; ++j) {
 				Molecule mol1 = arr[i];
@@ -130,11 +129,36 @@ public class AdjMatrix {
 					MCSMatrix.set(i, j, mcsp);
 					connMatrix.set(j, i, +diff);
 					MCSMatrix.set(j, i, mcsp);
+					
+					mol1.setIndex(i);
+					mol2.setIndex(j);
+					for (int key : mcsp.getQryConnAtom()) {
+						Set<Integer> set = mol1.getAtomMapping().get(key);
+						if (set == null) {
+							set = new TreeSet<Integer>();
+						}
+						
+						set.add(j);		// Add to set the index j of target molecule
+						mol1.getAtomMapping().put(key, set);  
+					}
+					
+					for (int key : mcsp.getTrgConnAtom()) {
+						Set<Integer> set = mol2.getAtomMapping().get(key);
+						if (set == null) {
+							set = new TreeSet<Integer>();
+						}
+						
+						set.add(i);		// Add to set the index j of query molecule
+						mol2.getAtomMapping().put(key, set);
+					}
 				}
 			}						
 		}
 		System.out.println();
 	}
+	
+	
+	
 	//returns a sorted array of CC matrices
 	/**
 	 * @return

@@ -26,16 +26,17 @@ public class Molecule implements Serializable, Comparable<Molecule> {
 	private IAtomContainer ac;
 	private Double potency;
 	private String fieldName;
-	private String molID;
-	private Map<Integer, Set<MolClustPair>> atomMapping;		// key is query atom number,
-	// value is a map of K = index of target molecule, V = set of pairs (atom index, clust idex)
+	private String molID = "";
+	private int index = -1; 	// this is the index of the molecule in AdjMatrix.molArray or -1 if no pairing exists 
+	private Map<Integer, Set<Integer>> atomMapping;		// key is query atom number,
+	// value is set of target molecules as <Integer> indices of Adj.Matrix.molArray
 	public Molecule(IAtomContainer ac, double potency) throws CloneNotSupportedException, CDKException {
 		StructureDiagramGenerator sdg = new StructureDiagramGenerator();
         sdg.setMolecule(ac.clone());
 		sdg.generateCoordinates();
         this.ac = sdg.getMolecule();
 		this.potency = potency;
-		atomMapping = new HashMap<Integer, Set<MolClustPair>>();
+		atomMapping = new HashMap<Integer, Set<Integer>>();
 	}
 	
 	public Molecule(IAtomContainer ac, double potency, String field)
@@ -67,10 +68,18 @@ public class Molecule implements Serializable, Comparable<Molecule> {
 		this.molID = molID;
 	}
 
-	public Map<Integer, Set<MolClustPair>> getAtomMapping() {
+	public Map<Integer, Set<Integer>> getAtomMapping() {
 		return atomMapping;
 	}
 
+
+	public int getIndex() {
+		return index;
+	}
+
+	public void setIndex(int index) {
+		this.index = index;
+	}
 
 	@Override
 	public int compareTo(Molecule o) {

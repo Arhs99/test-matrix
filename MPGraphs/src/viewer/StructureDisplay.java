@@ -29,14 +29,12 @@ import org.openscience.cdk.renderer.SymbolVisibility;
 import org.openscience.cdk.renderer.color.UniColor;
 import org.openscience.cdk.renderer.font.AWTFontManager;
 import org.openscience.cdk.renderer.generators.BasicSceneGenerator;
+import org.openscience.cdk.renderer.generators.HighlightGenerator;
 import org.openscience.cdk.renderer.generators.IGenerator;
 import org.openscience.cdk.renderer.generators.standard.StandardGenerator;
 import org.openscience.cdk.renderer.visitor.AWTDrawVisitor;
 
-
-
 public class StructureDisplay extends JPanel{
-
 	/**
 	 * 
 	 */
@@ -67,7 +65,7 @@ public class StructureDisplay extends JPanel{
 		List<IGenerator<IAtomContainer>> generators = new ArrayList<IGenerator<IAtomContainer>>();
         generators.add(new BasicSceneGenerator());
         generators.add(new StandardGenerator(font));
-        
+        generators.add(new HighlightGenerator());
 //        for (IAtom atom : mol.atoms(j)) {	// this is for labelling atoms
 //            atom.setProperty(StandardGenerator.ANNOTATION_LABEL,
 //                             Integer.toString(1 + mol.getAtomNumber(atom)));
@@ -180,6 +178,49 @@ public class StructureDisplay extends JPanel{
 				g.fillRoundRect(x, y, width, height, 30, 30);
 				g.setColor(col);//(Color.black);
 				g.drawRoundRect(x, y, width, height, 30, 30);
+				FontMetrics metrics = c.getFontMetrics(g.getFont());
+				String text = fieldStr + " : " + pot;
+				int textW = SwingUtilities.computeStringWidth(metrics, text);
+				int textH = metrics.getHeight();
+				int idW = SwingUtilities.computeStringWidth(metrics, id);
+				int idH = metrics.getHeight();
+				g.setColor(Color.BLACK);
+				g.drawString(text, x + Math.max(5, (width - textW)/2), y + height - textH + 4);
+				g.drawString(id, x + Math.max(5, (width - idW)/2), y + idH);
+				
+				Rectangle drawingArea = new Rectangle(x + 2, y + 2, width - 5, height - 5 - textH);
+				AWTDrawVisitor visitor = new AWTDrawVisitor((Graphics2D) g);
+				renderer.paint(mol, visitor, drawingArea, true);
+			}
+
+			@Override
+			public int getIconWidth() {
+				return width;
+			}
+
+			@Override
+			public int getIconHeight() {
+				return height;
+			}
+			
+		};
+	}
+	
+	public Icon getFlatIcon(int w, int h, Collection<Integer> highL, final double pot,
+			final Color col, final String fieldStr, final String id) {
+		final int width = w;
+		final int height = h;
+		if (highL != null) {
+			this.highlightSelect(highL);
+			//this.highlightFlatSelect(highL, Color.cyan);//col);
+		}
+		return new Icon() {
+			@Override
+			public void paintIcon(Component c, Graphics g, int x, int y) {
+				g.setColor(Color.white);
+				g.fillRect(x, y, width-2, height-2);
+				g.setColor(col);//(Color.black);
+				g.drawRect(x, y, width-2, height-2);
 				FontMetrics metrics = c.getFontMetrics(g.getFont());
 				String text = fieldStr + " : " + pot;
 				int textW = SwingUtilities.computeStringWidth(metrics, text);
