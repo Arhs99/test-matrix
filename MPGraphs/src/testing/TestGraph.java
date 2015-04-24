@@ -58,7 +58,7 @@ public class TestGraph {
 			Molecule molec = new Molecule(mol, Double.parseDouble(val), s);
 			map.add(molec);
 			++cnt;
-			if (cnt == 20) break;
+			if (cnt == 9) break;
 		}
 
 

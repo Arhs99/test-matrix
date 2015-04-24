@@ -10,6 +10,8 @@ import java.awt.Paint;
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.Stroke;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.geom.RoundRectangle2D;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -55,19 +57,63 @@ import edu.uci.ics.jung.visualization.decorators.VertexIconShapeTransformer;
 public class PairsTree extends JPanel {
 	Factory<Integer> edgeFactory;
 		
-		
 	private DelegateTree<Integer, Integer> graph;
 	private VisualizationViewer<Integer, Integer> vv;
+	private VisualizationViewer<Integer, Integer> vv1; 	//labels
+	private VisualizationViewer<Integer, Integer> vv2;	//with vertices
 	private static final int ICON_WIDTH = 180;
 	private static final int ICON_HEIGHT = 180;
-	//private TreeLayout<Integer, Integer> layout;
-	//private RadialTreeLayout<Integer,Integer> radialLayout;
 	private Map<Integer,Icon> iconMap;
 	private Map<Integer, Double> edgeMap;
 	private HeatMap heat;
-	//private AdjMatrix adm;
 	private int molIndex;
 	private double norm;
+	private boolean hasLabels;
+	private DefaultModalGraphMouse<Integer, Integer> graphMouse;
+	private JPanel controls;
+	
+	private void initVV() {
+		// with labels
+		FRLayout<Integer,Integer> flayout = new FRLayout<Integer, Integer>(graph);
+        flayout.setMaxIterations(100);
+        flayout.setInitializer(new RandomLocationTransformer<Integer>(new Dimension(1200, 800), 0));
+        flayout.setSize(new Dimension(1200, 800));
+        vv1 = new VisualizationViewer<>(flayout, new Dimension(1200, 900));
+        vv1.setBackground(Color.white);
+        vv1.getRenderContext().setEdgeShapeTransformer(new EdgeShape.QuadCurve<Integer, Integer>());
+        vv1.getRenderContext().setEdgeDrawPaintTransformer(new EdgeColor());
+        vv1.getRenderContext().setEdgeStrokeTransformer(new EdgeStrokeFunc());
+        vv1.getRenderContext().setArrowFillPaintTransformer(new EdgeColor());// ConstantTransformer(Color.lightGray));
+        vv1.getRenderContext().setArrowDrawPaintTransformer(new EdgeColor());//ConstantTransformer(Color.black));
+        vv1.getRenderContext().setVertexShapeTransformer(new Transformer<Integer, Shape>() {
+			@Override
+			public Shape transform(Integer arg0) {
+				return new Rectangle(ICON_WIDTH - 5, ICON_HEIGHT - 5);
+			}        	
+        });
+        
+        DefaultVertexIconTransformer<Integer> vertexIconTransformer =
+            	new DefaultVertexIconTransformer<Integer>();
+        vertexIconTransformer.setIconMap(iconMap);
+        vv1.getRenderContext().setVertexIconTransformer(vertexIconTransformer);
+        
+        // vertices layout
+        RadialTreeLayout<Integer,Integer> radialLayout = new RadialTreeLayout<>(graph, 250, 250);//, 900, 900);
+		radialLayout.setSize(new Dimension(1200, 900));
+		vv2 = new VisualizationViewer<Integer,Integer>(radialLayout, new Dimension(1200, 900));
+		vv2.setBackground(Color.white);
+	    //vv2.getRenderContext().setEdgeShapeTransformer(new EdgeShape.QuadCurve<Integer, Integer>());
+	    vv2.getRenderContext().setEdgeDrawPaintTransformer(new EdgeColor());
+	    //vv2.getRenderContext().setEdgeStrokeTransformer(new EdgeStrokeFunc());
+	    //vv.getRenderContext().setArrowFillPaintTransformer(new EdgeColor());// ConstantTransformer(Color.lightGray));
+	    //vv.getRenderContext().setArrowDrawPaintTransformer(new EdgeColor());
+	    
+	    
+        vv1.setGraphMouse(graphMouse);
+        vv1.addKeyListener(graphMouse.getModeKeyListener());
+        vv2.setGraphMouse(graphMouse);
+        vv2.addKeyListener(graphMouse.getModeKeyListener());
+	}
 	
 	public PairsTree(HeatMap heat, int molIndex, double norm) throws Exception {
 		this.heat = heat;
@@ -82,56 +128,47 @@ public class PairsTree extends JPanel {
 		graph = new DelegateTree<Integer, Integer>();
 		iconMap = new HashMap<>();
 		edgeMap = new HashMap<>();
+		graphMouse = new DefaultModalGraphMouse<>();
+		controls = new JPanel();
 		createTree();
-		
-		FRLayout<Integer,Integer> flayout = new FRLayout<Integer, Integer>(graph);
-        flayout.setMaxIterations(100);
-        flayout.setInitializer(new RandomLocationTransformer<Integer>(new Dimension(1200, 800), 0));
-        flayout.setSize(new Dimension(1200, 800));
-        vv = new VisualizationViewer<>(flayout, new Dimension(1200, 900));
-		
-//		radialLayout = new RadialTreeLayout<Integer,Integer>(graph, 250, 250);//, 900, 900);
-//        radialLayout.setSize(new Dimension(1200, 900));
-//        vv =  new VisualizationViewer<Integer,Integer>(radialLayout, new Dimension(1200, 900));
+		initVV();		
+		vv = hasLabels? vv1 : vv2;
         
-        vv.setBackground(Color.white);
-        vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.QuadCurve<Integer, Integer>());
-        vv.getRenderContext().setEdgeDrawPaintTransformer(new EdgeColor());
-        vv.getRenderContext().setEdgeStrokeTransformer(new EdgeStrokeFunc());
-        vv.getRenderContext().setArrowFillPaintTransformer(new EdgeColor());// ConstantTransformer(Color.lightGray));
-        vv.getRenderContext().setArrowDrawPaintTransformer(new EdgeColor());//ConstantTransformer(Color.black));
-        
-//        VertexIconShapeTransformer<Integer> vertexIconShapeTransformer =
-//                new VertexIconShapeTransformer<Integer>(new EllipseVertexShapeTransformer<Integer>());
-//        vertexIconShapeTransformer.setIconMap(iconMap);
-        vv.getRenderContext().setVertexShapeTransformer(new Transformer<Integer, Shape>() {
-			@Override
-			public Shape transform(Integer arg0) {
-				// TODO Auto-generated method stub
-				return new Rectangle(ICON_WIDTH - 5, ICON_HEIGHT - 5);
-			}
-        	
-        });
-        
-        DefaultVertexIconTransformer<Integer> vertexIconTransformer =
-            	new DefaultVertexIconTransformer<Integer>();
-        vertexIconTransformer.setIconMap(iconMap);
-        vv.getRenderContext().setVertexIconTransformer(vertexIconTransformer);
-        
-        
-        DefaultModalGraphMouse<Integer, Integer> graphMouse = new DefaultModalGraphMouse<>();
-        vv.setGraphMouse(graphMouse);
-        vv.addKeyListener(graphMouse.getModeKeyListener());
-        
-        JComboBox modeBox = graphMouse.getModeComboBox();
+		JComboBox modeBox = graphMouse.getModeComboBox();
         modeBox.addItemListener(graphMouse.getModeListener());
         graphMouse.setMode(ModalGraphMouse.Mode.TRANSFORMING);
         
-        JPanel controls = new JPanel();
+        String[] combos = new String[]{"Labels", "Vertices"};
+        final JComboBox jcb = new JComboBox(combos);
+        jcb.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				@SuppressWarnings("rawtypes")
+				JComboBox cb = (JComboBox)e.getSource();
+				int ind = cb.getSelectedIndex();
+				hasLabels = (ind == 0);
+				//System.out.println(ind + " " + hasLabels + " " + e.toString());
+				setGraphLayout();
+				//PairsTree.this.validate();
+			}
+		});
+        //jcb.setSelectedItem("Labels");
+                
         controls.add(modeBox);
+        controls.add(jcb);
         setLayout(new BorderLayout(0, 0));
         this.add(vv);
         this.add(controls, BorderLayout.SOUTH);
+	}
+	
+	private void setGraphLayout() {
+		this.removeAll();
+		vv = hasLabels? vv1 : vv2;
+		this.add(vv);
+        this.add(controls, BorderLayout.SOUTH);
+		this.validate();
+		this.repaint();
 	}
 	
 	public void setMolIndex(int molIndex) throws Exception {	//modi
@@ -145,39 +182,14 @@ public class PairsTree extends JPanel {
 		this.iconMap = new HashMap<>();
 		this.edgeMap = new HashMap<>();
 		createTree();
+		initVV();
 		
-//		this.radialLayout = new RadialTreeLayout<Integer,Integer>(graph, 250, 250);
-//		radialLayout.setSize(new Dimension(1200, 900));
-//		vv.setGraphLayout(radialLayout);
-		
-		FRLayout<Integer,Integer> flayout = new FRLayout<Integer, Integer>(graph);
-        flayout.setMaxIterations(100);
-        flayout.setInitializer(new RandomLocationTransformer<Integer>(new Dimension(1200, 800), 0));
-        flayout.setSize(new Dimension(1200, 800));
-        vv.setGraphLayout(flayout);
-		
-//	VertexIconShapeTransformer<Integer> vertexIconShapeTransformer =
-//                new VertexIconShapeTransformer<Integer>(new EllipseVertexShapeTransformer<Integer>());
-//        vertexIconShapeTransformer.setIconMap(iconMap);
-//        vv.getRenderContext().setVertexShapeTransformer(vertexIconShapeTransformer);
-		
-		vv.getRenderContext().setVertexShapeTransformer(new Transformer<Integer, Shape>() {
-			@Override
-			public Shape transform(Integer arg0) {
-				// TODO Auto-generated method stub
-				return new Rectangle(-ICON_WIDTH/2, -ICON_HEIGHT/2, ICON_WIDTH, ICON_HEIGHT);
-			}
-        	
-        });
-		
-		 DefaultVertexIconTransformer<Integer> vertexIconTransformer =
-	            	new DefaultVertexIconTransformer<Integer>();
-	        vertexIconTransformer.setIconMap(iconMap);
-	        vv.getRenderContext().setVertexIconTransformer(vertexIconTransformer);
-		
-	   
-		//this.add(vv);
+		this.removeAll();
+		vv = hasLabels? vv1 : vv2;
+		this.add(vv);
+        this.add(controls, BorderLayout.SOUTH);
 		this.validate();
+		this.repaint();
 	}
 	
 	public VisualizationViewer<Integer, Integer> getVViewer() {
@@ -252,6 +264,8 @@ public class PairsTree extends JPanel {
 				edgeMap.put(childNum - 1, dP);		// edge numbering has to start from 0
 				++childNum;
 			}
+			//state = childNum < 20? State.WITH_LABELS : State.NO_LABELS;
+			hasLabels = childNum < 20;
 		}
 	}
 	
@@ -281,7 +295,7 @@ public class PairsTree extends JPanel {
 				Molecule molec = new Molecule(mol, Double.parseDouble(val), s);
 				map.add(molec);
 				++cnt;
-				if (cnt == 10) break;
+				if (cnt == 9) break;
 			}
 			AdjMatrix adm = new AdjMatrix(map);
 			SideDisplay disp = new SideDisplay();
