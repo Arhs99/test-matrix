@@ -50,7 +50,7 @@ import viewer.SubGrid;
 public class Main extends JPanel {
 	private AdjMatrix adm;
 	private SideDisplay disp;
-	private HeatMap heat;
+	private HeatMap heat = null;
 	private Task task;
 	private JProgressBar progressBar;
 	private JPanel extra;
@@ -65,6 +65,7 @@ public class Main extends JPanel {
 	private Component rigidArea_1;
 	private JPanel progPanel;
 	private SubGrid sub;
+	private JMenuBar menuBar;
 	
 	class Task extends SwingWorker<AdjMatrix, Void> {
 		private SDFreader sdf;
@@ -97,7 +98,7 @@ public class Main extends JPanel {
 				}				
 				set.add(molec);
 				++cnt;
-				if (cnt == 120) break;
+				if (cnt == 80) break;
 			}
 			return new AdjMatrix(set, progressBar);
 		}
@@ -203,8 +204,12 @@ public class Main extends JPanel {
 		
 	}
 	private void initListeners() {
-		ptree.getVViewer().addMouseListener(new MouseInputAdapter() {
-			public void mouseClicked(MouseEvent e) {
+		
+		ptree.addPropertyChangeListener("PTreeState", new PropertyChangeListener() {
+			
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				System.out.println(evt);
 				extra.remove(ptree);
 				extra.add(heat);
 				disp.setVisible(true);
@@ -275,51 +280,22 @@ public class Main extends JPanel {
 		
 	}
 	
-	public Main(SDFreader sdf, int fieldInd, int idInd, double norm) throws Exception {
-		super(new BorderLayout());
-		this.setPreferredSize(new Dimension(1000, 1000));
-		this.norm = norm;
-		this.fieldInd = fieldInd;
-		this.idInd = idInd;
-		extra = new JPanel();
-		extra.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
-		extra.setSize(new Dimension(1000, 1000));
-		
-//		rigidArea_1 = Box.createRigidArea(new Dimension(148, 147));
-//		extra.add(rigidArea_1);
-		progPanel = new JPanel();
-		progPanel.setLayout(new BorderLayout(0, 0));
-		progressBar = new JProgressBar(0, 100);
-		progressBar.setValue(0);
-        progressBar.setStringPainted(true);
-        progPanel.add(progressBar, BorderLayout.SOUTH);
-        extra.add(progPanel);
-        
-        lblMolecules = new JLabel("Molecules : " + sdf.sdfMap().size());
-        progPanel.add(lblMolecules, BorderLayout.NORTH);
-        this.add(extra);
-		task = new Task(sdf);
-		task.execute();		
-		}
 	
-	public static void showGUI() {
-		final JFrame f = new JFrame("Heatmap");
-		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		f.getContentPane().setLayout(new BorderLayout());
-		f.getContentPane().setPreferredSize(new Dimension(1300, 1000));
-		
-		JMenuBar menuBar = new JMenuBar();
-		f.setJMenuBar(menuBar);
-		
+	public JMenuBar MenuBar() {
+		return menuBar;
+	}
+
+
+	public void initMenu() {
 		final JFileChooser fc = new JFileChooser();
-		
+		menuBar = new JMenuBar();
 		JMenu mnFile = new JMenu("File");
 		menuBar.add(mnFile);
 		
 		JMenuItem mntmImportSdf = new JMenuItem("Import sdf");
 		mntmImportSdf.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				int returnVal = fc.showOpenDialog(f);
+				int returnVal = fc.showOpenDialog(null);
 
 		        if (returnVal == JFileChooser.APPROVE_OPTION) {
 		            File file = fc.getSelectedFile();
@@ -330,11 +306,12 @@ public class Main extends JPanel {
 		            	fieldDialog.showDial();
 		            	
 		            	if (fieldDialog.getFieldInd() != -1) {
-							Main main = new Main(sdf, fieldDialog.getFieldInd(), fieldDialog.getIdInd(),
+		            		Main.this.removeAll();
+							init(sdf, fieldDialog.getFieldInd(), fieldDialog.getIdInd(),
 									fieldDialog.getNorm());
-							f.getContentPane().removeAll();
-							f.getContentPane().add(main);
-							f.validate();
+//							f.getContentPane().removeAll();
+//							f.getContentPane().add(main);
+//							f.validate();
 		            	}
 					} catch (Exception e1) {
 						// TODO Auto-generated catch block
@@ -352,7 +329,7 @@ public class Main extends JPanel {
 		JMenuItem mntmExportSdf = new JMenuItem("Export sdf");
 		mntmExportSdf.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				int returnVal = fc.showSaveDialog(f);
+				int returnVal = fc.showSaveDialog(null);
 				 if (returnVal == JFileChooser.APPROVE_OPTION) {
 			            File file = fc.getSelectedFile();
 			            //This is where a real application would open the file.
@@ -363,6 +340,67 @@ public class Main extends JPanel {
 				}
 		});
 		mnFile.add(mntmExportSdf);
+		
+		JMenu mnView = new JMenu("View");
+		menuBar.add(mnView);
+		
+		JMenuItem mntmMatrix = new JMenuItem("Matrix");
+		mntmMatrix.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (Main.this.heat == null) {
+					System.out.println("GAGA");
+				}
+			}
+		});
+		mnView.add(mntmMatrix);
+		
+		JMenuItem mntmGraph = new JMenuItem("Graph");
+		mntmGraph.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+			}
+		});
+		mnView.add(mntmGraph);
+	}
+	
+	private void init(SDFreader sdf, int fieldInd, int idInd, double norm) {
+		this.norm = norm;
+		this.fieldInd = fieldInd;
+		this.idInd = idInd;
+		extra = new JPanel();
+		extra.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+		extra.setSize(new Dimension(1000, 1000));
+		
+		progPanel = new JPanel();
+		progPanel.setLayout(new BorderLayout(0, 0));
+		progressBar = new JProgressBar(0, 100);
+		progressBar.setValue(0);
+        progressBar.setStringPainted(true);
+        progPanel.add(progressBar, BorderLayout.SOUTH);
+        extra.add(progPanel);
+        
+        lblMolecules = new JLabel("Molecules : " + sdf.sdfMap().size());
+        progPanel.add(lblMolecules, BorderLayout.NORTH);
+        this.add(extra);
+        this.validate();
+		task = new Task(sdf);
+		task.execute();
+	}
+	
+	public Main() throws Exception {
+		super(new BorderLayout());
+		this.setPreferredSize(new Dimension(1000, 1000));
+		initMenu();
+		}
+	
+	public static void showGUI() throws Exception {
+		final JFrame f = new JFrame("Heatmap");
+		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		f.getContentPane().setLayout(new BorderLayout());
+		f.getContentPane().setPreferredSize(new Dimension(1300, 1000));
+		Main main = new Main();
+		
+		f.setJMenuBar(main.MenuBar());
+		f.add(main);
 		f.pack();
 		f.setVisible(true);
 	}
@@ -370,7 +408,12 @@ public class Main extends JPanel {
 	public static void main(String[] args) {
 		javax.swing.SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				showGUI();
+				try {
+					showGUI();
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 	});
 }

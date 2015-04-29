@@ -12,18 +12,23 @@ import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.Icon;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.ToolTipManager;
 
 import main.AdjMatrix;
 import main.Gradient;
@@ -65,12 +70,17 @@ public class PairsTree extends JPanel {
 	private static final int ICON_HEIGHT = 180;
 	private Map<Integer,Icon> iconMap;
 	private Map<Integer, Double> edgeMap;
+	private Map<Integer, Molecule> vertexMap;
 	private HeatMap heat;
 	private int molIndex;
 	private double norm;
 	private boolean hasLabels;
 	private DefaultModalGraphMouse<Integer, Integer> graphMouse;
 	private JPanel controls;
+	private final Color[] colors = Gradient.GRADIENT_RED_TO_GREEN;
+	private List<Double> potencies;
+	private JPanel sidePanel;
+	private String fieldStr;
 	
 	private void initVV() {
 		// with labels
@@ -103,16 +113,52 @@ public class PairsTree extends JPanel {
 		vv2 = new VisualizationViewer<Integer,Integer>(radialLayout, new Dimension(1200, 900));
 		vv2.setBackground(Color.white);
 	    //vv2.getRenderContext().setEdgeShapeTransformer(new EdgeShape.QuadCurve<Integer, Integer>());
-	    vv2.getRenderContext().setEdgeDrawPaintTransformer(new EdgeColor());
+	    vv2.getRenderContext().setEdgeDrawPaintTransformer(new ConstantTransformer(Color.lightGray));
 	    //vv2.getRenderContext().setEdgeStrokeTransformer(new EdgeStrokeFunc());
-	    //vv.getRenderContext().setArrowFillPaintTransformer(new EdgeColor());// ConstantTransformer(Color.lightGray));
-	    //vv.getRenderContext().setArrowDrawPaintTransformer(new EdgeColor());
-	    
-	    
+	    vv2.getRenderContext().setArrowFillPaintTransformer(new ConstantTransformer(Color.lightGray));
+	    vv2.getRenderContext().setArrowDrawPaintTransformer(new ConstantTransformer(Color.lightGray));
+	    vv2.getRenderContext().setVertexFillPaintTransformer(new Transformer<Integer,Paint>() {
+			 public Paint transform(Integer i) {
+				 double pot = Math.min(norm, potencies.get(i));
+				 double normal = 1.0 - pot / norm; // Assuming max=100 and min=0
+				 int colorIndex = (int) Math.floor(normal * (colors.length - 1));
+				 return colors[colorIndex];
+			 }
+			 });
+	    vv2.add(sidePanel, BorderLayout.EAST);
         vv1.setGraphMouse(graphMouse);
         vv1.addKeyListener(graphMouse.getModeKeyListener());
         vv2.setGraphMouse(graphMouse);
         vv2.addKeyListener(graphMouse.getModeKeyListener());
+        vv2.setVertexToolTipTransformer(new Transformer<Integer, String>() {			
+			@Override
+			public String transform(Integer v) {
+				Molecule mol = vertexMap.get(v);
+				
+				sidePanel.removeAll();
+				try {
+					StructureDisplay sd = new StructureDisplay(mol.getMol());
+					Icon icon = sd.getFlatIcon(ICON_WIDTH, ICON_HEIGHT,
+							null, mol.getPotency(), Color.BLACK, fieldStr,
+							mol.getMolID());
+					JLabel label = new JLabel(icon);
+					sidePanel.add(label);
+					vv2.validate();
+					vv2.repaint();
+					
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				return mol.getMolID();
+			}
+		});
+	}
+	
+	private class PTGraphMouse<V,E> extends DefaultModalGraphMouse<V,E> {
+		public void mouseClicked(MouseEvent e) {
+			PairsTree.this.firePropertyChange("PTreeState", true, false);
+		}
 	}
 	
 	public PairsTree(HeatMap heat, int molIndex, double norm) throws Exception {
@@ -128,10 +174,15 @@ public class PairsTree extends JPanel {
 		graph = new DelegateTree<Integer, Integer>();
 		iconMap = new HashMap<>();
 		edgeMap = new HashMap<>();
-		graphMouse = new DefaultModalGraphMouse<>();
+		vertexMap = new HashMap<>();
+		graphMouse = new PTGraphMouse<>(); //DefaultModalGraphMouse<>();
 		controls = new JPanel();
+		sidePanel = new JPanel();
+		sidePanel.setLayout(new BoxLayout(sidePanel, BoxLayout.Y_AXIS));
 		createTree();
-		initVV();		
+		initVV();
+		ToolTipManager.sharedInstance().setReshowDelay(0);
+		ToolTipManager.sharedInstance().setInitialDelay(0);
 		vv = hasLabels? vv1 : vv2;
         
 		JComboBox modeBox = graphMouse.getModeComboBox();
@@ -153,7 +204,6 @@ public class PairsTree extends JPanel {
 				//PairsTree.this.validate();
 			}
 		});
-        //jcb.setSelectedItem("Labels");
                 
         controls.add(modeBox);
         controls.add(jcb);
@@ -196,7 +246,6 @@ public class PairsTree extends JPanel {
 		return vv;
 	}
 	
-	
 	private class EdgeColor implements Transformer<Integer,Paint> {
 		public Paint transform(Integer i) {
 			double dP = edgeMap.get(i);
@@ -230,17 +279,18 @@ public class PairsTree extends JPanel {
 			}
 			return st;
 		}
-
 	}
 	
 	private void createTree() throws Exception {
 		Molecule rootMol = heat.getMolArray()[molIndex];
-		 
+		potencies = new ArrayList<>(); 
 		StructureDisplay sd = new StructureDisplay(rootMol.getMol());
-		String fieldStr = rootMol.getFieldName().substring(0, 10); // show only 10 first chars of field name
+		fieldStr = rootMol.getFieldName().substring(0, 10); // show only 10 first chars of field name
 		iconMap.put(0, sd.getIcon(ICON_WIDTH, ICON_HEIGHT, null,
 				rootMol.getPotency(), Color.black, fieldStr, rootMol.getMolID()));
 		graph.setRoot(0);
+		vertexMap.put(0, rootMol);
+		potencies.add(rootMol.getPotency());
 		
 		int childNum = 1;
 		for (int i = 0; i < heat.getMCSArr()[molIndex].length; ++i) {
@@ -260,11 +310,12 @@ public class PairsTree extends JPanel {
 				Collection<Integer> highL = i > molIndex ? pair.targetHi() : pair.queryHi();
 				iconMap.put(childNum, sd.getIcon(ICON_WIDTH, ICON_HEIGHT,
 						highL, mol.getPotency(), col, fieldStr, mol.getMolID()));
-				graph.addEdge(edgeFactory.create(), 0, childNum);	
+				graph.addEdge(edgeFactory.create(), 0, childNum);
+				vertexMap.put(childNum, mol);
+				potencies.add(mol.getPotency());
 				edgeMap.put(childNum - 1, dP);		// edge numbering has to start from 0
 				++childNum;
 			}
-			//state = childNum < 20? State.WITH_LABELS : State.NO_LABELS;
 			hasLabels = childNum < 20;
 		}
 	}
@@ -273,16 +324,8 @@ public class PairsTree extends JPanel {
 		   String file = args[0];
 		   SDFreader sdf = new SDFreader(file);
 		   TreeSet<Molecule> map = new TreeSet<>();
-			//HashMap<Integer, Icon> map = new HashMap<>();
 			int cnt = 0;
 			for (IAtomContainer mol : sdf.sdfMap().keySet()) {
-				//StructureDiagramGenerator sdg = new StructureDiagramGenerator();
-//		        sdg.setMolecule(mol.clone());
-//				sdg.generateCoordinates();
-//		        mol = sdg.getMolecule();
-//				StructureDisplay sd = new StructureDisplay(mol);
-//				map.put(cnt, sd.getIcon(200, 200));
-				//++cnt;
 				String s = "Rfms Ic50 Um Hpad4 Avg";
 				String val = sdf.sdfMap().get(mol)[1]; 	// index of field is 0
 				if (val == null || mol.getAtomCount() == 0) {
@@ -293,9 +336,10 @@ public class PairsTree extends JPanel {
 				ExtAtomContainerManipulator.aromatizeCDK(mol);
 
 				Molecule molec = new Molecule(mol, Double.parseDouble(val), s);
+				molec.setMolID(Integer.toString(cnt + 100000));
 				map.add(molec);
 				++cnt;
-				if (cnt == 9) break;
+				if (cnt == 19) break;
 			}
 			AdjMatrix adm = new AdjMatrix(map);
 			SideDisplay disp = new SideDisplay();

@@ -23,11 +23,11 @@ class ImageToolTip extends JToolTip {
 	 */
 	private static final long serialVersionUID = -20721788964098197L;
 
-	public ImageToolTip(StructureDisplay tdp1, StructureDisplay tdp2) {
+	public ImageToolTip(StructureDisplay tdp1) {
 
 		JPanel panel = new JPanel();
 		panel.add(tdp1);
-		panel.add(tdp2);
+		//panel.add(tdp2);
 		setUI(new ImageToolTipUI(tdp1));
 	}
 

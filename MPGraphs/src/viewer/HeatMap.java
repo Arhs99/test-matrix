@@ -191,8 +191,8 @@ public class HeatMap extends JPanel {
 		this.fg = Color.black;
 		
 		tdp1 = new StructureDisplay();
-		tdp2 = new StructureDisplay();
-		molToolTip = new ImageToolTip(tdp1, tdp2);
+		//tdp2 = new StructureDisplay();
+		molToolTip = new ImageToolTip(tdp1);
 		
 		updateGradient(colors);
 		init(data);
@@ -912,10 +912,6 @@ public class HeatMap extends JPanel {
 			Molecule query = heat.molArray[mouseY - 1];
 			Molecule target = heat.molArray[mouseX - 1];
 			SMSDpair pair = (SMSDpair) heat.MCSarray[mouseY - 1][mouseX - 1]; // if i>j invert
-			//System.out.println(e.getPoint() + " " + mouseX + "  " + mouseY + 
-			//		"  " + pair.rxnmol() + " %n " + pair.prdmol()) ;
-			
-
 			
 			if (pair == null) {
 				try {
