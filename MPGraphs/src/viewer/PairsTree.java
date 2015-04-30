@@ -28,6 +28,7 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JToolTip;
 import javax.swing.ToolTipManager;
 
 import main.AdjMatrix;
@@ -79,8 +80,13 @@ public class PairsTree extends JPanel {
 	private JPanel controls;
 	private final Color[] colors = Gradient.GRADIENT_RED_TO_GREEN;
 	private List<Double> potencies;
-	private JPanel sidePanel;
+//	private JPanel sidePanel;
 	private String fieldStr;
+	private boolean onVertex = false;
+
+	private StructureDisplay tdp1;
+
+	private ImageToolTip molToolTip;
 	
 	private void initVV() {
 		// with labels
@@ -110,7 +116,15 @@ public class PairsTree extends JPanel {
         // vertices layout
         RadialTreeLayout<Integer,Integer> radialLayout = new RadialTreeLayout<>(graph, 250, 250);//, 900, 900);
 		radialLayout.setSize(new Dimension(1200, 900));
-		vv2 = new VisualizationViewer<Integer,Integer>(radialLayout, new Dimension(1200, 900));
+		vv2 = new VisualizationViewer<Integer,Integer>(radialLayout, new Dimension(1200, 900)) {
+			public JToolTip createToolTip() {
+				if (onVertex) {
+					return molToolTip;
+				} else {
+					return new JToolTip();
+				}
+			}
+		};
 		vv2.setBackground(Color.white);
 	    //vv2.getRenderContext().setEdgeShapeTransformer(new EdgeShape.QuadCurve<Integer, Integer>());
 	    vv2.getRenderContext().setEdgeDrawPaintTransformer(new ConstantTransformer(Color.lightGray));
@@ -125,7 +139,7 @@ public class PairsTree extends JPanel {
 				 return colors[colorIndex];
 			 }
 			 });
-	    vv2.add(sidePanel, BorderLayout.EAST);
+//	    vv2.add(sidePanel, BorderLayout.EAST);
         vv1.setGraphMouse(graphMouse);
         vv1.addKeyListener(graphMouse.getModeKeyListener());
         vv2.setGraphMouse(graphMouse);
@@ -134,18 +148,18 @@ public class PairsTree extends JPanel {
 			@Override
 			public String transform(Integer v) {
 				Molecule mol = vertexMap.get(v);
-				
-				sidePanel.removeAll();
+				onVertex = true;
+				//sidePanel.removeAll();
 				try {
+					tdp1.setMol(mol.getMol());
 					StructureDisplay sd = new StructureDisplay(mol.getMol());
-					Icon icon = sd.getFlatIcon(ICON_WIDTH, ICON_HEIGHT,
-							null, mol.getPotency(), Color.BLACK, fieldStr,
-							mol.getMolID());
-					JLabel label = new JLabel(icon);
-					sidePanel.add(label);
-					vv2.validate();
-					vv2.repaint();
-					
+//					Icon icon = sd.getFlatIcon(ICON_WIDTH, ICON_HEIGHT,
+//							null, mol.getPotency(), Color.BLACK, fieldStr,
+//							mol.getMolID());
+//					JLabel label = new JLabel(icon);
+//					sidePanel.add(label);
+//					vv2.validate();
+//					vv2.repaint();					
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -177,8 +191,10 @@ public class PairsTree extends JPanel {
 		vertexMap = new HashMap<>();
 		graphMouse = new PTGraphMouse<>(); //DefaultModalGraphMouse<>();
 		controls = new JPanel();
-		sidePanel = new JPanel();
-		sidePanel.setLayout(new BoxLayout(sidePanel, BoxLayout.Y_AXIS));
+//		sidePanel = new JPanel();
+//		sidePanel.setLayout(new BoxLayout(sidePanel, BoxLayout.Y_AXIS));
+		tdp1 = new StructureDisplay();
+		molToolTip = new ImageToolTip(tdp1);
 		createTree();
 		initVV();
 		ToolTipManager.sharedInstance().setReshowDelay(0);

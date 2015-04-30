@@ -70,8 +70,7 @@ public class StructureDisplay extends JPanel{
 //            atom.setProperty(StandardGenerator.ANNOTATION_LABEL,
 //                             Integer.toString(1 + mol.getAtomNumber(atom)));
 //        }
-        
-        
+               
         renderer = new AtomContainerRenderer(generators, 
         		new AWTFontManager());
         RendererModel rm = renderer.getRenderer2DModel();
@@ -142,8 +141,7 @@ public class StructureDisplay extends JPanel{
 			if (atomSet.contains(a) && atomSet.contains(b)) {
 				bond.setProperty(StandardGenerator.HIGHLIGHT_COLOR, col);
 			}
-		}
-		
+		}		
 		repaint();
 	}
 	
@@ -212,7 +210,6 @@ public class StructureDisplay extends JPanel{
 		final int height = h;
 		if (highL != null) {
 			this.highlightSelect(highL);
-			//this.highlightFlatSelect(highL, Color.cyan);//col);
 		}
 		return new Icon() {
 			@Override
@@ -244,8 +241,7 @@ public class StructureDisplay extends JPanel{
 			@Override
 			public int getIconHeight() {
 				return height;
-			}
-			
+			}			
 		};
 	}
 	
