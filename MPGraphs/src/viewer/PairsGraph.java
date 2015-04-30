@@ -3,12 +3,14 @@ package viewer;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.Paint;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Formatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -16,6 +18,7 @@ import java.util.TreeSet;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JTextArea;
 import javax.swing.JToolTip;
 import javax.swing.ToolTipManager;
 
@@ -56,6 +59,7 @@ public class PairsGraph  extends JPanel {
 	private double min;
 	private double max;
 	private ArrayList<Integer> arr;
+	private JTextArea text;
 	
 	public PairsGraph(SideDisplay disp) {
 		super();
@@ -64,6 +68,14 @@ public class PairsGraph  extends JPanel {
 		Layout<Integer, Number> layout = new StaticLayout<Integer, Number>(g);
 		vv = new VisualizationViewer<>(layout, new Dimension(W, H));
 		vv.setBackground(Color.black);
+		JPanel panel = new JPanel();
+		vv.add(panel, BorderLayout.EAST);
+		panel.setLayout(new BorderLayout(0, 0));		
+		text = new JTextArea();
+		text.setForeground(Color.WHITE);
+		text.setBackground(Color.BLACK);
+		//text.setText("Stats\n\nThis is stats");
+		panel.add(text, BorderLayout.NORTH);
 		this.add(vv);
 	}
 	
@@ -73,20 +85,31 @@ public class PairsGraph  extends JPanel {
 		g = new UndirectedSparseGraph<Integer, Number>();
 		TreeMap<MolTransf, ArrayList<Integer>> map = pm.TransfClustMap(clustInd);
 		arr = (ArrayList<Integer>) map.values().toArray()[transfInd];
-		//System.out.println(clustInd + "  " + transfInd);
-		//System.out.println(arr);
-		//min = Collections.min(arr);
 		dPMap = new HashMap<>();
 		for (int i = 0; i < arr.size(); ++i) {
 			g.addVertex(i);
 			int ind = arr.get(i);
 			Double dP = pm.getdPArr().get(ind) * pm.getTrArr().get(ind).getDirection();
 			dPMap.put(i, dP);
-			System.out.println(dP);
-			
+			System.out.println(dP);		
 		}
 		min = Collections.min(dPMap.values());
 		max = Collections.max(dPMap.values());
+		double sz = dPMap.values().size();
+		double sum = 0;
+		for (double v : dPMap.values()) {
+			sum += v;
+		}
+		double avg = sum / sz;
+		sum = 0;
+		for (double v : dPMap.values()) {
+			sum += (avg - v) * (avg - v);
+		}
+		double stdDev = sz > 1 ? Math.sqrt(sum / (sz - 1)) : 0.0;
+		String title = map.keySet().iterator().next().toString() + "\n";
+		String desc;
+		desc = String.format("Average: %f%n" + "StdDev: %f%n", avg, stdDev);
+		text.setText(title + desc + "\n");
 		
 		Layout<Integer, Number> layout = new StaticLayout<Integer, Number>(g, new Transformer<Integer,Point2D>() {
 			public Point2D transform(Integer i) {
@@ -107,8 +130,7 @@ public class PairsGraph  extends JPanel {
 		ToolTipManager.sharedInstance().setInitialDelay(0);
 		vv.getRenderContext().setVertexShapeTransformer(
         		new ConstantTransformer(new Rectangle2D.Float(-6,-6,12,12)));
-		vv.setVertexToolTipTransformer(new Transformer<Integer, String>() {
-			
+		vv.setVertexToolTipTransformer(new Transformer<Integer, String>() {			
 			@Override
 			public String transform(Integer v) {
 				try {
@@ -159,9 +181,21 @@ public class PairsGraph  extends JPanel {
 		 }
 		 };
 		 vv.getRenderContext().setVertexFillPaintTransformer(vertexPaint);
+		 vv.addPreRenderPaintable(new VisualizationViewer.Paintable(){
+             public void paint(Graphics g) {
+            	 g.setColor(Color.WHITE);
+            	 g.drawLine(20, H/2, W-20, H/2);
+            	 g.drawLine(20, 20, 20, H-20);
+             }
+
+			@Override
+			public boolean useTransform() {
+				// TODO Auto-generated method stub
+				return false;
+			}});
 		 
-		 
+             
 		 this.validate();
 	}
-
+	
 }
