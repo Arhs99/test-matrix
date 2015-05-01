@@ -90,8 +90,7 @@ public class PairsGraph  extends JPanel {
 			g.addVertex(i);
 			int ind = arr.get(i);
 			Double dP = pm.getdPArr().get(ind) * pm.getTrArr().get(ind).getDirection();
-			dPMap.put(i, dP);
-			System.out.println(dP);		
+			dPMap.put(i, -dP);
 		}
 		min = Collections.min(dPMap.values());
 		max = Collections.max(dPMap.values());
@@ -106,7 +105,7 @@ public class PairsGraph  extends JPanel {
 			sum += (avg - v) * (avg - v);
 		}
 		double stdDev = sz > 1 ? Math.sqrt(sum / (sz - 1)) : 0.0;
-		String title = map.keySet().iterator().next().toString() + "\n";
+		String title = map.keySet().toArray()[transfInd].toString() + "\n";
 		String desc;
 		desc = String.format("Average: %f%n" + "StdDev: %f%n", avg, stdDev);
 		text.setText(title + desc + "\n");
