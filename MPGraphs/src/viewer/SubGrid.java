@@ -109,11 +109,12 @@ public class SubGrid extends JPanel {
 		this.validate();
 	}
 	
-	public void setIndex(int molIndex, int atomIndex) throws Exception {	//modi
+	public void setIndex(int molIndex, int atomIndex) throws Exception {
 		this.molIndex = molIndex;
 		rootMol = adm.getMolArray()[molIndex];	
 		rootPanel.removeAll();
-		String fieldStr = rootMol.getFieldName().substring(0, 10); // show only 10 first chars of field name
+		String fieldStr = rootMol.getFieldName().length() > 10?  // show only 10 first chars of field name
+				rootMol.getFieldName().substring(0, 10) : rootMol.getFieldName(); 
 		rootIcon = new SelectionIcon(ICON_WIDTH + 40, ICON_HEIGHT + 40, rootMol.getMol(),
 				rootMol.getPotency(), fieldStr, rootMol.getMolID(), rootMol.getAtomMapping().keySet());
 		JLabel rootLabel = new JLabel(rootIcon);
@@ -171,8 +172,8 @@ public class SubGrid extends JPanel {
 	
 	private void createTree() throws Exception {		
 		Molecule rootMol = adm.getMolArray()[molIndex];		 
-		String fieldStr = rootMol.getFieldName().substring(0, 10); // show only 10 first chars of field name
-		
+		String fieldStr = rootMol.getFieldName().length() > 10?  // show only 10 first chars of field name
+				rootMol.getFieldName().substring(0, 10) : rootMol.getFieldName(); 
 		Set<Integer> set = rootMol.getAtomMapping().get(atomIndex);
 		if (set == null) return;
 		for (int i : set) {					
