@@ -78,6 +78,7 @@ public class Main extends JPanel {
 			Set<Molecule> set = new TreeSet<>();
 			int cnt = 0;
 			String s = sdf.fieldStr()[fieldInd];
+			if (s == null) s = "";
 			for (IAtomContainer mol : sdf.sdfMap().keySet()) {
 				
 				String val = sdf.sdfMap().get(mol)[fieldInd];
@@ -98,7 +99,7 @@ public class Main extends JPanel {
 				}				
 				set.add(molec);
 				++cnt;
-				if (cnt == 80) break;
+				if (cnt == 160) break;
 			}
 			return new AdjMatrix(set, progressBar);
 		}

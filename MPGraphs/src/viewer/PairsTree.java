@@ -81,7 +81,7 @@ public class PairsTree extends JPanel {
 	private final Color[] colors = Gradient.GRADIENT_RED_TO_GREEN;
 	private List<Double> potencies;
 //	private JPanel sidePanel;
-	private String fieldStr;
+	private String fieldStr = "";
 	private boolean onVertex = false;
 
 	private StructureDisplay tdp1;
@@ -301,7 +301,8 @@ public class PairsTree extends JPanel {
 		Molecule rootMol = heat.getMolArray()[molIndex];
 		potencies = new ArrayList<>(); 
 		StructureDisplay sd = new StructureDisplay(rootMol.getMol());
-		fieldStr = rootMol.getFieldName().substring(0, 10); // show only 10 first chars of field name
+		if (fieldStr.length() > 10)
+			fieldStr = rootMol.getFieldName().substring(0, 10); // show only 10 first chars of field name
 		iconMap.put(0, sd.getIcon(ICON_WIDTH, ICON_HEIGHT, null,
 				rootMol.getPotency(), Color.black, fieldStr, rootMol.getMolID()));
 		graph.setRoot(0);
