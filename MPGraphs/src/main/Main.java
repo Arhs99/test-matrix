@@ -141,8 +141,6 @@ public class Main extends JPanel {
 							extra.removeAll();
 							clustInd = ind;
 							heat.updateMap(ind);
-							//pg.setVisible(false);
-							//heat.setVisible(true);
 							extra.add(heat);
 							comboTransfBox.setModel(new DefaultComboBoxModel
 									(pm.comboTransfClust(ind)));
@@ -210,7 +208,6 @@ public class Main extends JPanel {
 			
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
-				System.out.println(evt);
 				extra.remove(ptree);
 				extra.add(heat);
 				disp.setVisible(true);
@@ -349,7 +346,7 @@ public class Main extends JPanel {
 		mntmMatrix.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (Main.this.heat == null) {
-					System.out.println("GAGA");
+					System.out.println("View");
 				}
 			}
 		});

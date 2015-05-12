@@ -25,6 +25,8 @@ import main.SMSDpair;
 
 import org.openscience.cdk.interfaces.IAtomContainer;
 
+import cern.colt.matrix.DoubleMatrix2D;
+
 
 /**
  * 
@@ -145,11 +147,11 @@ public class HeatMap extends JPanel {
 	private Graphics2D bufferedGraphics;
 	private JToolTip molToolTip;
 	private StructureDisplay tdp1;
-	private StructureDisplay tdp2;
 	private Object[][] MCSarray;
 	private SideDisplay disp;
 	private AdjMatrix adjRef;
 	private boolean useGraphicsYAxis;
+	private DoubleMatrix2D matrix;
 
 	/**
 	 * @param data
@@ -213,25 +215,24 @@ public class HeatMap extends JPanel {
 		this.adjRef = adm;
 		this.molArray = adm.getMolArray();
 		this.MCSarray = adm.getMCSMatrix().toArray();
+		this.matrix = adm.getConnMatrix();
 		this.disp = disp;
 		//addMouseMotionListener(this);
 		MouseListener listen = new MouseListener(this);
 		this.addMouseListener(listen);
-		this.addMouseMotionListener(listen);
-		
+		this.addMouseMotionListener(listen);		
 	}
-	
-	//
+
 	public void updateMap(int i) {
 		if (i == 0) {
 			this.molArray = adjRef.getMolArray();
-			System.out.println(adjRef.getMolArray());
 			this.MCSarray = adjRef.getMCSMatrix().toArray();
+			this.matrix = adjRef.getConnMatrix();
 			init(adjRef.getConnMatrix().toArray());
 		} else {
 			this.molArray = adjRef.molVector()[i-1];
 			this.MCSarray = adjRef.getCCSMSDMatr()[i-1].toArray();
-			System.out.println(adjRef.molVector()[i-1]);
+			matrix = adjRef.getCCDoubleMatr()[i-1];
 			init(adjRef.getCCDoubleMatr()[i-1].toArray());
 		}
 		
@@ -951,6 +952,11 @@ public class HeatMap extends JPanel {
 	
 	public Molecule[] getMolArray() {
 		return molArray;
+	}
+
+
+	public DoubleMatrix2D getMatrix() {
+		return matrix;
 	}
 
 

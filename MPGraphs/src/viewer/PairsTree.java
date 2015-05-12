@@ -104,7 +104,7 @@ public class PairsTree extends JPanel {
         vv1.getRenderContext().setVertexShapeTransformer(new Transformer<Integer, Shape>() {
 			@Override
 			public Shape transform(Integer arg0) {
-				return new Rectangle(ICON_WIDTH - 5, ICON_HEIGHT - 5);
+				return new Rectangle(-ICON_WIDTH / 2, - ICON_HEIGHT / 2, ICON_WIDTH, ICON_HEIGHT);
 			}        	
         });
         
@@ -301,6 +301,7 @@ public class PairsTree extends JPanel {
 		Molecule rootMol = heat.getMolArray()[molIndex];
 		potencies = new ArrayList<>(); 
 		StructureDisplay sd = new StructureDisplay(rootMol.getMol());
+		fieldStr = rootMol.getFieldName();
 		if (fieldStr.length() > 10)
 			fieldStr = rootMol.getFieldName().substring(0, 10); // show only 10 first chars of field name
 		iconMap.put(0, sd.getIcon(ICON_WIDTH, ICON_HEIGHT, null,

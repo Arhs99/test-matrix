@@ -58,9 +58,8 @@ public class TestGraph {
 			Molecule molec = new Molecule(mol, Double.parseDouble(val), s);
 			map.add(molec);
 			++cnt;
-			if (cnt == 9) break;
+			if (cnt == 45) break;
 		}
-
 
 		Factory<Graph<Integer,Number>> graphFactory =
 				new Factory<Graph<Integer,Number>>() {

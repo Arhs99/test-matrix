@@ -184,7 +184,6 @@ public class SubGrid extends JPanel {
 						red.add(mol);
 					}
 				}
-		System.out.println(set);
 		for (Molecule mol : green) {
 			StructureDisplay sd = new StructureDisplay(mol.getMol());
 			double dP = (DeltaP.logDiff(rootMol.getPotency(), mol.getPotency(), norm) == Double.MIN_VALUE ?
@@ -350,7 +349,7 @@ public class SubGrid extends JPanel {
 					atomSel.setProperty(StandardGenerator.HIGHLIGHT_COLOR, HIL);
 					try {
 						setAtomIndex(rootIcon.getMol().getAtomNumber(atomSel));
-						System.out.println(rootIcon.getMol().getAtomNumber(atomSel));
+						//System.out.println(rootIcon.getMol().getAtomNumber(atomSel));
 					} catch (Exception e1) {
 						// TODO Auto-generated catch block
 						e1.printStackTrace();

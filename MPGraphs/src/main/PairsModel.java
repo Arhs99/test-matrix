@@ -143,9 +143,9 @@ public class PairsModel {
 				right = s2;
 				direction = 1;
 			} else {
-				left = s2;
-				right = s1;
-				direction = -1;
+				left = s1;
+				right = s2;
+				direction = 1;
 			}
 		}
 		
