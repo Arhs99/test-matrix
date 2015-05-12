@@ -60,6 +60,8 @@ public class PairsGraph  extends JPanel {
 	private double max;
 	private ArrayList<Integer> arr;
 	private JTextArea text;
+	private int clustInd;
+	private int transfInd;
 	
 	public PairsGraph(SideDisplay disp) {
 		super();
@@ -82,6 +84,8 @@ public class PairsGraph  extends JPanel {
 	@SuppressWarnings("unchecked")
 	public void set(PairsModel pmod, int clustInd, int transfInd) {
 		this.pm = pmod;
+		this.clustInd = clustInd;
+		this.transfInd = transfInd;
 		g = new UndirectedSparseGraph<Integer, Number>();
 		TreeMap<MolTransf, ArrayList<Integer>> map = pm.TransfClustMap(clustInd);
 		arr = (ArrayList<Integer>) map.values().toArray()[transfInd];
@@ -89,8 +93,9 @@ public class PairsGraph  extends JPanel {
 		for (int i = 0; i < arr.size(); ++i) {
 			g.addVertex(i);
 			int ind = arr.get(i);
-			Double dP = pm.getdPArr().get(ind) * pm.getTrArr().get(ind).getDirection();
-			dPMap.put(i, -dP);
+			MolTransf mt = (MolTransf) map.keySet().toArray()[transfInd];
+			Double dP = pm.getdPArr().get(ind) * mt.getDirection();
+			dPMap.put(i, dP);
 		}
 		min = Collections.min(dPMap.values());
 		max = Collections.max(dPMap.values());
@@ -118,7 +123,7 @@ public class PairsGraph  extends JPanel {
 				
 				Double x = 40 + ((W - 50.0)/dPMap.size()) * (i );
 				Double y = (H/2) - (H/2 - 60) *  dPMap.get(i) / yBound;
-				System.out.println(x + ", " + y + " " + yBound);
+				//System.out.println(x + ", " + y + " " + yBound);
 				//System.out.println(dPMap.values());
 				return new Point2D.Double(x, y);
 			}
@@ -139,11 +144,13 @@ public class PairsGraph  extends JPanel {
 					e.printStackTrace();
 				}
 				int index = arr.get(v);
+				TreeMap<MolTransf, ArrayList<Integer>> map = pm.TransfClustMap(PairsGraph.this.clustInd);
+				MolTransf mt = (MolTransf) map.keySet().toArray()[PairsGraph.this.transfInd];
 				Molecule query;
 				Molecule target;
 				Collection<Integer> queryHi;
 				Collection<Integer> targetHi;
-				if (pm.getTrArr().get(index).getDirection() > 0) {
+				if (mt.getDirection() > 0) {
 					query = pm.getqArr().get(index);
 					target = pm.gettArr().get(index);
 					queryHi = pm.getqHilArr().get(index);
