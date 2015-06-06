@@ -40,6 +40,7 @@ import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.smsd.tools.ExtAtomContainerManipulator;
 
+import viewer.GraphView;
 import viewer.HeatMap;
 import viewer.PairsGraph;
 import viewer.PairsTree;
@@ -66,6 +67,7 @@ public class Main extends JPanel {
 	private JPanel progPanel;
 	private SubGrid sub;
 	private JMenuBar menuBar;
+	private GraphView graphView = null;
 	
 	class Task extends SwingWorker<AdjMatrix, Void> {
 		private SDFreader sdf;
@@ -99,7 +101,7 @@ public class Main extends JPanel {
 				}				
 				set.add(molec);
 				++cnt;
-				//if (cnt == 10) break;
+				if (cnt == 80) break;
 			}
 			return new AdjMatrix(set, progressBar);
 		}
@@ -114,6 +116,7 @@ public class Main extends JPanel {
 				String[] comboTransf = pm.comboTransf();
 				disp = new SideDisplay();
 				heat = new HeatMap(adm, true, disp, Gradient.GRADIENT_RED_TO_GREEN);
+				graphView = new GraphView(heat, 100);
 				final PairsGraph pg = new PairsGraph(disp);
 				int CCcount = adm.getCCDoubleMatr().length;
 				final String comboDesc[] = new String[CCcount + 1];
@@ -345,8 +348,12 @@ public class Main extends JPanel {
 		JMenuItem mntmMatrix = new JMenuItem("Matrix");
 		mntmMatrix.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if (Main.this.heat == null) {
-					System.out.println("View");
+				if (Main.this.heat != null) {
+					extra.remove(graphView);
+					disp.setVisible(true);
+					extra.add(heat);
+					Main.this.validate();
+					Main.this.repaint();
 				}
 			}
 		});
@@ -355,6 +362,13 @@ public class Main extends JPanel {
 		JMenuItem mntmGraph = new JMenuItem("Graph");
 		mntmGraph.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				if (Main.this.graphView != null) {
+					extra.remove(heat);
+					disp.setVisible(false);
+					extra.add(graphView);
+					Main.this.validate();
+					Main.this.repaint();
+				}
 			}
 		});
 		mnView.add(mntmGraph);
