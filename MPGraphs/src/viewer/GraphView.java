@@ -124,12 +124,7 @@ public class GraphView extends JPanel {
 		};	
 	}
 	
-	public GraphView(HeatMap heat, double norm) {
-		//super();
-		this.heat = heat;
-		this.norm = norm;
-		//this.molIndex = molIndex;
-		initFactories();	
+	private void initVV() {
 		graph = GraphMatrixOperations .matrixToGraph(heat.getMatrix(),
 				graphFactory, vertexFactory, edgeFactory);
 		layout = new AggregateLayout<Integer,Integer>(new FRLayout<Integer,Integer>(graph));
@@ -245,6 +240,20 @@ public class GraphView extends JPanel {
 		this.add(south, BorderLayout.SOUTH);
 		this.validate();
 		this.repaint();
+	}
+	
+	public void update() {
+		this.removeAll();
+		initVV();
+	}
+	
+	public GraphView(HeatMap heat, double norm) {
+		//super();
+		this.heat = heat;
+		this.norm = norm;
+		//this.molIndex = molIndex;
+		initFactories();	
+		initVV();
 	}
 	
 	public void clusterAndRecolor(AggregateLayout<Integer,Integer> layout,
