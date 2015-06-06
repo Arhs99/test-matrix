@@ -349,7 +349,7 @@ public class Main extends JPanel {
 		mntmMatrix.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (Main.this.heat != null) {
-					extra.remove(graphView);
+					extra.removeAll();//(graphView);
 					disp.setVisible(true);
 					extra.add(heat);
 					Main.this.validate();
@@ -363,8 +363,9 @@ public class Main extends JPanel {
 		mntmGraph.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (Main.this.graphView != null) {
-					extra.remove(heat);
+					extra.removeAll();//(heat);
 					disp.setVisible(false);
+					graphView.update();
 					extra.add(graphView);
 					Main.this.validate();
 					Main.this.repaint();
