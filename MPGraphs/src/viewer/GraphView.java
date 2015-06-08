@@ -207,7 +207,6 @@ public class GraphView extends JPanel {
 				       }
 				     };
 				     worker.execute();
-				     //clusterAndRecolor(layout, numEdgesToRemove, similarColors);
 					sliderBorder.setTitle(
 						COMMANDSTRING + edgeBetweennessSlider.getValue());
 					eastControls.repaint();
