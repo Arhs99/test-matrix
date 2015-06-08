@@ -10,9 +10,6 @@ import java.awt.Paint;
 import java.awt.Stroke;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -28,54 +25,42 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
+import javax.swing.SwingWorker;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.apache.commons.collections15.Factory;
-import org.apache.commons.collections15.Transformer;
-import org.apache.commons.collections15.functors.ConstantTransformer;
-import org.apache.commons.collections15.functors.MapTransformer;
-import org.apache.commons.collections15.map.LazyMap;
-import org.openscience.cdk.exception.CDKException;
-import org.openscience.cdk.interfaces.IAtomContainer;
-import org.openscience.smsd.tools.ExtAtomContainerManipulator;
-
-import edu.uci.ics.jung.algorithms.layout.AggregateLayout;
-import edu.uci.ics.jung.algorithms.layout.FRLayout;
-import edu.uci.ics.jung.algorithms.layout.ISOMLayout;
-import edu.uci.ics.jung.algorithms.layout.util.RandomLocationTransformer;
-import edu.uci.ics.jung.algorithms.matrix.GraphMatrixOperations;
-import edu.uci.ics.jung.graph.Graph;
-import edu.uci.ics.jung.graph.SparseMultigraph;
-import edu.uci.ics.jung.graph.UndirectedSparseGraph;
-import edu.uci.ics.jung.visualization.VisualizationViewer;
-
-import org.apache.commons.collections15.Factory;
-import org.apache.commons.collections15.Transformer;
-import org.apache.commons.collections15.functors.ConstantTransformer;
-import org.apache.commons.collections15.functors.MapTransformer;
-import org.apache.commons.collections15.map.LazyMap;
-
-import edu.uci.ics.jung.algorithms.cluster.EdgeBetweennessClusterer;
-import edu.uci.ics.jung.algorithms.layout.AggregateLayout;
-import edu.uci.ics.jung.algorithms.layout.CircleLayout;
-import edu.uci.ics.jung.algorithms.layout.FRLayout;
-import edu.uci.ics.jung.algorithms.layout.Layout;
-import edu.uci.ics.jung.algorithms.layout.util.Relaxer;
-import edu.uci.ics.jung.graph.Graph;
-import edu.uci.ics.jung.graph.SparseMultigraph;
-import edu.uci.ics.jung.io.PajekNetReader;
-import edu.uci.ics.jung.visualization.GraphZoomScrollPane;
-import edu.uci.ics.jung.visualization.VisualizationViewer;
-import edu.uci.ics.jung.visualization.control.DefaultModalGraphMouse;
 import main.AdjMatrix;
 import main.Gradient;
 import main.Molecule;
 import main.SDFreader;
 import main.SMSDpair;
 
+import org.apache.commons.collections15.Factory;
+import org.apache.commons.collections15.Transformer;
+import org.apache.commons.collections15.functors.ConstantTransformer;
+import org.apache.commons.collections15.functors.MapTransformer;
+import org.apache.commons.collections15.map.LazyMap;
+import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.smsd.tools.ExtAtomContainerManipulator;
+
+import edu.uci.ics.jung.algorithms.cluster.EdgeBetweennessClusterer;
+import edu.uci.ics.jung.algorithms.layout.AggregateLayout;
+import edu.uci.ics.jung.algorithms.layout.FRLayout;
+import edu.uci.ics.jung.algorithms.layout.Layout;
+import edu.uci.ics.jung.algorithms.layout.util.Relaxer;
+import edu.uci.ics.jung.algorithms.matrix.GraphMatrixOperations;
+import edu.uci.ics.jung.graph.Graph;
+import edu.uci.ics.jung.graph.SparseMultigraph;
+import edu.uci.ics.jung.visualization.GraphZoomScrollPane;
+import edu.uci.ics.jung.visualization.VisualizationViewer;
+import edu.uci.ics.jung.visualization.control.DefaultModalGraphMouse;
+
 public class GraphView extends JPanel {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6291448645703591947L;
 	private VisualizationViewer<Integer, Integer> vv;
 	private Factory<Integer> edgeFactory;
 	private Factory<Integer> vertexFactory;
@@ -84,8 +69,6 @@ public class GraphView extends JPanel {
 	private Graph<Integer, Integer> graph;
 	private HeatMap heat;
 	private double norm;
-	private int molIndex;
-	
 	private Map<Integer,Paint> vertexPaints = 
 			LazyMap.<Integer,Paint>decorate(new HashMap<Integer,Paint>(),
 					new ConstantTransformer(Color.white));
@@ -209,11 +192,22 @@ public class GraphView extends JPanel {
 		clusterAndRecolor(layout, 0, similarColors);
 		
 		edgeBetweennessSlider.addChangeListener(new ChangeListener() {
+			private int numEdgesToRemove;
+
 			public void stateChanged(ChangeEvent e) {
 				JSlider source = (JSlider) e.getSource();
 				if (!source.getValueIsAdjusting()) {
-					int numEdgesToRemove = source.getValue();
-					clusterAndRecolor(layout, numEdgesToRemove, similarColors);
+					this.numEdgesToRemove = source.getValue();
+					SwingWorker<Void, Void> worker 
+				       = new SwingWorker<Void, Void>() {				 
+				       @Override
+				       public Void doInBackground() {
+				    	 clusterAndRecolor(layout, numEdgesToRemove, similarColors);
+				    	 return null;
+				       }
+				     };
+				     worker.execute();
+				     //clusterAndRecolor(layout, numEdgesToRemove, similarColors);
 					sliderBorder.setTitle(
 						COMMANDSTRING + edgeBetweennessSlider.getValue());
 					eastControls.repaint();
@@ -244,6 +238,8 @@ public class GraphView extends JPanel {
 	
 	public void update() {
 		this.removeAll();
+		//initVviewer ivv = new initVviewer();
+		//ivv.execute();
 		initVV();
 	}
 	
@@ -252,7 +248,9 @@ public class GraphView extends JPanel {
 		this.heat = heat;
 		this.norm = norm;
 		//this.molIndex = molIndex;
-		initFactories();	
+		initFactories();
+		//initVviewer ivv = new initVviewer();
+		//ivv.execute();
 		initVV();
 	}
 	
