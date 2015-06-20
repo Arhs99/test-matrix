@@ -36,6 +36,7 @@ import javax.swing.border.SoftBevelBorder;
 import javax.swing.event.MouseInputAdapter;
 
 import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.graph.ConnectivityChecker;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.smsd.tools.ExtAtomContainerManipulator;
@@ -83,14 +84,18 @@ public class Main extends JPanel {
 			if (s == null) s = "";
 			for (IAtomContainer mol : sdf.sdfMap().keySet()) {
 				
+				if (!ConnectivityChecker.isConnected(mol)) {
+					continue;
+				}
+				
 				String val = sdf.sdfMap().get(mol)[fieldInd];
 				if (val == null || mol.getAtomCount() == 0) {
 					continue;
 				}
 				
-//				ExtAtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol);
-//				mol = ExtAtomContainerManipulator.removeHydrogens(mol);
-//				ExtAtomContainerManipulator.aromatizeCDK(mol);
+				ExtAtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol);
+				mol = ExtAtomContainerManipulator.removeHydrogens(mol);
+				ExtAtomContainerManipulator.aromatizeCDK(mol);
 
 				Molecule molec = new Molecule(mol, Double.parseDouble(val), s);
 				if (idInd == 0) {
@@ -101,7 +106,7 @@ public class Main extends JPanel {
 				}				
 				set.add(molec);
 				++cnt;
-				if (cnt == 80) break;
+				//if (cnt == 25) break;
 			}
 			return new AdjMatrix(set, progressBar);
 		}

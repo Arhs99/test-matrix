@@ -52,6 +52,8 @@ import edu.uci.ics.jung.algorithms.layout.util.Relaxer;
 import edu.uci.ics.jung.algorithms.matrix.GraphMatrixOperations;
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.SparseMultigraph;
+import edu.uci.ics.jung.graph.UndirectedSparseGraph;
+import edu.uci.ics.jung.graph.UndirectedSparseMultigraph;
 import edu.uci.ics.jung.visualization.GraphZoomScrollPane;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 import edu.uci.ics.jung.visualization.control.DefaultModalGraphMouse;
@@ -101,8 +103,8 @@ public class GraphView extends JPanel {
 				return count++;
 			}};		
 		graphFactory = new Factory<Graph<Integer,Integer>>() {
-			public SparseMultigraph<Integer,Integer> create() {
-				return new SparseMultigraph<Integer,Integer>();
+			public UndirectedSparseGraph<Integer,Integer> create() {
+				return new UndirectedSparseGraph<Integer,Integer>();
 			}
 		};	
 	}
@@ -181,37 +183,49 @@ public class GraphView extends JPanel {
 		eastControls.add(Box.createVerticalGlue());
 		eastControls.add(edgeBetweennessSlider);
 
-		final String COMMANDSTRING = "Edges removed for clusters: ";
+		final String COMMANDSTRING = "Edges removed: ";
 		final String eastSize = COMMANDSTRING + edgeBetweennessSlider.getValue();
 		
 		final TitledBorder sliderBorder = BorderFactory.createTitledBorder(eastSize);
 		eastControls.setBorder(sliderBorder);
 		//eastControls.add(eastSize);
 		eastControls.add(Box.createVerticalGlue());
-		
-		clusterAndRecolor(layout, 0, similarColors);
-		
+
+		clusterAndRecolor(0, similarColors);
+
 		edgeBetweennessSlider.addChangeListener(new ChangeListener() {
 			private int numEdgesToRemove;
+			private boolean thinking = false;
 
 			public void stateChanged(ChangeEvent e) {
-				JSlider source = (JSlider) e.getSource();
-				if (!source.getValueIsAdjusting()) {
+				final JSlider source = (JSlider) e.getSource();
+				if (!source.getValueIsAdjusting() && !thinking) {
+					thinking = true;
 					this.numEdgesToRemove = source.getValue();
 					SwingWorker<Void, Void> worker 
-				       = new SwingWorker<Void, Void>() {				 
-				       @Override
-				       public Void doInBackground() {
-				    	 clusterAndRecolor(layout, numEdgesToRemove, similarColors);
-				    	 return null;
-				       }
-				     };
-				     worker.execute();
-					sliderBorder.setTitle(
-						COMMANDSTRING + edgeBetweennessSlider.getValue());
-					eastControls.repaint();
-					vv.validate();
-					vv.repaint();
+					= new SwingWorker<Void, Void>() {				 
+						@Override
+						public Void doInBackground() {
+							//source.setValueIsAdjusting(true);
+							clusterAndRecolor(numEdgesToRemove, similarColors);
+
+							return null;
+						}
+						public void done() {
+							thinking = false;
+							vv.validate();
+							vv.repaint();
+						}
+					};
+					worker.execute();
+
+//				   // if (worker.isDone()) {
+						sliderBorder.setTitle(
+							COMMANDSTRING + edgeBetweennessSlider.getValue());
+						eastControls.repaint();
+						vv.validate();
+						vv.repaint();
+//				   // }
 				}
 			}
 		});
@@ -253,7 +267,7 @@ public class GraphView extends JPanel {
 		initVV();
 	}
 	
-	public void clusterAndRecolor(AggregateLayout<Integer,Integer> layout,
+	public void clusterAndRecolor(//AggregateLayout<Integer,Integer> layout,
 			int numEdgesToRemove,
 			Color[] colors) {
 			//Now cluster the vertices by removing the top 50 edges with highest betweenness
@@ -261,16 +275,17 @@ public class GraphView extends JPanel {
 			//			colorCluster( g.getVertices(), colors[0] );
 			//		} else {
 			
-			Graph<Integer,Integer> g = layout.getGraph();
-	        layout.removeAll();
-
+			//Graph<Integer,Integer> g = layout.getGraph();
+	        //layout.removeAll();
+		System.out.println("Started");
 			EdgeBetweennessClusterer<Integer,Integer> clusterer =
 				new EdgeBetweennessClusterer<Integer,Integer>(numEdgesToRemove);
-			Set<Set<Integer>> clusterSet = clusterer.transform(g);
+			Set<Set<Integer>> clusterSet = clusterer.transform(graph);
 			List<Integer> edges = clusterer.getEdgesRemoved();
 
 			int i = 0;
 			//Set the colors of each node so that each cluster's vertices have the same color
+			
 			for (Iterator<Set<Integer>> cIt = clusterSet.iterator(); cIt.hasNext();) {
 
 				Set<Integer> vertices = cIt.next();
@@ -279,7 +294,7 @@ public class GraphView extends JPanel {
 				colorCluster(vertices, c);
 				i++;
 			}
-			for (Integer e : g.getEdges()) {
+			for (Integer e : graph.getEdges()) {
 
 				if (edges.contains(e)) {
 					edgePaints.put(e, Color.lightGray);
@@ -287,12 +302,16 @@ public class GraphView extends JPanel {
 					edgePaints.put(e, Color.black);
 				}
 			}
+			System.out.println("That's it");
+//			vv.validate();
+//			vv.repaint();
 
 		}
 
 		private void colorCluster(Set<Integer> vertices, Color c) {
 			for (Integer v : vertices) {
 				vertexPaints.put(v, c);
+				
 			}
 		}
 		
