@@ -367,8 +367,7 @@ public class GraphView extends JPanel {
 			//Now cluster the vertices by removing the top 50 edges with highest betweenness
 			//		if (numEdgesToRemove == 0) {
 			//			colorCluster( g.getVertices(), colors[0] );
-			//		} else {
-			
+			//		} else {			
 			//Graph<Integer,Integer> g = layout.getGraph();
 	        layout.removeAll();
 
