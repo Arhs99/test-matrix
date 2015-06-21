@@ -453,6 +453,7 @@ public class GraphView extends JPanel {
 			}
 			++j;
 			}
+			
 						
 		   JFrame frame = new JFrame();
 	        Container content = frame.getContentPane();
