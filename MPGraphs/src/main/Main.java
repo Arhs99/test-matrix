@@ -26,6 +26,7 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.SwingConstants;
@@ -36,6 +37,7 @@ import javax.swing.border.SoftBevelBorder;
 import javax.swing.event.MouseInputAdapter;
 
 import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.graph.ConnectivityChecker;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.smsd.tools.ExtAtomContainerManipulator;
@@ -82,6 +84,9 @@ public class Main extends JPanel {
 			String s = sdf.fieldStr()[fieldInd];
 			if (s == null) s = "";
 			for (IAtomContainer mol : sdf.sdfMap().keySet()) {
+				if (!ConnectivityChecker.isConnected(mol)) {
+					continue;
+					}
 				
 				String val = sdf.sdfMap().get(mol)[fieldInd];
 				if (val == null || mol.getAtomCount() == 0) {
@@ -373,7 +378,23 @@ public class Main extends JPanel {
 			}
 		});
 		mnView.add(mntmGraph);
+		
+		menuBar.add(Box.createHorizontalGlue());
+		
+		JMenu mnHelp = new JMenu("Help");
+		menuBar.add(mnHelp);
+		JMenuItem mntmAbout = new JMenuItem("About");
+		mntmAbout.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				JOptionPane.showMessageDialog(null, "(c) 2015 Kostas Papadopoulos\n\n" +
+			"No guarantees that anything will work as expected\n", "About",
+					    JOptionPane.PLAIN_MESSAGE);
+			}
+		});
+		mnHelp.add(mntmAbout);
 	}
+	
+
 	
 	private void init(SDFreader sdf, int fieldInd, int idInd, double norm) {
 		this.norm = norm;

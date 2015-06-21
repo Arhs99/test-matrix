@@ -188,7 +188,6 @@ public class HeatMap extends JPanel {
 		super();		
 		this.useGraphicsYAxis = useGraphicsYAxis;
 		this.setDoubleBuffered(true);
-
 		this.bg = Color.white;
 		this.fg = Color.black;
 		

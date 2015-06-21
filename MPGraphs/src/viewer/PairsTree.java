@@ -80,7 +80,6 @@ public class PairsTree extends JPanel {
 	private JPanel controls;
 	private final Color[] colors = Gradient.GRADIENT_RED_TO_GREEN;
 	private List<Double> potencies;
-//	private JPanel sidePanel;
 	private String fieldStr = "";
 	private boolean onVertex = false;
 
@@ -119,6 +118,7 @@ public class PairsTree extends JPanel {
 		vv2 = new VisualizationViewer<Integer,Integer>(radialLayout, new Dimension(1200, 900)) {
 			public JToolTip createToolTip() {
 				if (onVertex) {
+					onVertex = false;
 					return molToolTip;
 				} else {
 					return new JToolTip();
@@ -143,23 +143,17 @@ public class PairsTree extends JPanel {
         vv1.setGraphMouse(graphMouse);
         vv1.addKeyListener(graphMouse.getModeKeyListener());
         vv2.setGraphMouse(graphMouse);
-        vv2.addKeyListener(graphMouse.getModeKeyListener());
+        //vv2.addKeyListener(graphMouse.getModeKeyListener());
         vv2.setVertexToolTipTransformer(new Transformer<Integer, String>() {			
 			@Override
 			public String transform(Integer v) {
 				Molecule mol = vertexMap.get(v);
 				onVertex = true;
+				ToolTipManager.sharedInstance().setEnabled(true);
 				//sidePanel.removeAll();
 				try {
 					tdp1.setMol(mol.getMol());
-					StructureDisplay sd = new StructureDisplay(mol.getMol());
-//					Icon icon = sd.getFlatIcon(ICON_WIDTH, ICON_HEIGHT,
-//							null, mol.getPotency(), Color.BLACK, fieldStr,
-//							mol.getMolID());
-//					JLabel label = new JLabel(icon);
-//					sidePanel.add(label);
-//					vv2.validate();
-//					vv2.repaint();					
+					StructureDisplay sd = new StructureDisplay(mol.getMol());					
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -215,9 +209,7 @@ public class PairsTree extends JPanel {
 				JComboBox cb = (JComboBox)e.getSource();
 				int ind = cb.getSelectedIndex();
 				hasLabels = (ind == 0);
-				//System.out.println(ind + " " + hasLabels + " " + e.toString());
 				setGraphLayout();
-				//PairsTree.this.validate();
 			}
 		});
                 

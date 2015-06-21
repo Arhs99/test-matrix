@@ -10,6 +10,7 @@ import java.awt.Paint;
 import java.awt.Stroke;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ExecutionException;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -25,7 +27,9 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
+import javax.swing.JToolTip;
 import javax.swing.SwingWorker;
+import javax.swing.ToolTipManager;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -51,10 +55,12 @@ import edu.uci.ics.jung.algorithms.layout.Layout;
 import edu.uci.ics.jung.algorithms.layout.util.Relaxer;
 import edu.uci.ics.jung.algorithms.matrix.GraphMatrixOperations;
 import edu.uci.ics.jung.graph.Graph;
-import edu.uci.ics.jung.graph.SparseMultigraph;
+import edu.uci.ics.jung.graph.UndirectedSparseGraph;
 import edu.uci.ics.jung.visualization.GraphZoomScrollPane;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 import edu.uci.ics.jung.visualization.control.DefaultModalGraphMouse;
+import edu.uci.ics.jung.visualization.decorators.ToStringLabeller;
+import edu.uci.ics.jung.visualization.renderers.Renderer;
 
 public class GraphView extends JPanel {
 	/**
@@ -72,9 +78,16 @@ public class GraphView extends JPanel {
 	private Map<Integer,Paint> vertexPaints = 
 			LazyMap.<Integer,Paint>decorate(new HashMap<Integer,Paint>(),
 					new ConstantTransformer(Color.white));
-	private Map<Integer,Paint> edgePaints =
-		LazyMap.<Integer,Paint>decorate(new HashMap<Integer,Paint>(),
-				new ConstantTransformer(Color.blue));
+//	private Map<Integer,Paint> edgePaints =
+//		LazyMap.<Integer,Paint>decorate(new HashMap<Integer,Paint>(),
+//				new ConstantTransformer(Color.blue));
+	
+	private boolean onVertex = false;
+	private StructureDisplay tdp1;
+	private ImageToolTip molToolTip;
+	private Map<Integer, Molecule> vertexMap;
+	
+	
 	public final Color[] similarColors =
 		{
 			new Color(216, 134, 134),
@@ -88,6 +101,13 @@ public class GraphView extends JPanel {
 			new Color(60, 220, 220),
 			new Color(30, 250, 100)
 		};
+	private DefaultModalGraphMouse<Integer, Integer> graphMouse;
+	
+	private class PTGraphMouse<V,E> extends DefaultModalGraphMouse<V,E> {
+		public void mouseClicked(MouseEvent e) {
+			GraphView.this.firePropertyChange("PTreeState", true, false);
+		}
+	}
 	
 	private void initFactories() {
 		vertexFactory = new Factory<Integer>() {
@@ -101,21 +121,50 @@ public class GraphView extends JPanel {
 				return count++;
 			}};		
 		graphFactory = new Factory<Graph<Integer,Integer>>() {
-			public SparseMultigraph<Integer,Integer> create() {
-				return new SparseMultigraph<Integer,Integer>();
+			public UndirectedSparseGraph<Integer,Integer> create() {
+				return new UndirectedSparseGraph<Integer,Integer>();
+//			public DirectedSparseGraph<Integer,Integer> create() {
+//				return new DirectedSparseGraph<Integer,Integer>();
 			}
 		};	
+	}
+	
+	private void initTip() throws Exception {
+		graphMouse = new PTGraphMouse<>();
+		tdp1 = new StructureDisplay();
+		molToolTip = new ImageToolTip(tdp1);
 	}
 	
 	private void initVV() {
 		graph = GraphMatrixOperations .matrixToGraph(heat.getMatrix(),
 				graphFactory, vertexFactory, edgeFactory);
+		
+		vertexMap = new HashMap<>();
+		for (int i = 0; i < heat.getMolArray().length; ++i) {
+				Molecule mol = heat.getMolArray()[i];
+				vertexMap.put(i, mol);
+			}
 		layout = new AggregateLayout<Integer,Integer>(new FRLayout<Integer,Integer>(graph));
-		//		layout.setMaxIterations(100);
-		//layout.setInitializer(new RandomLocationTransformer<Integer>(new Dimension(1200, 800), 0));
 		layout.setSize(new Dimension(1200, 800));
-		vv = new VisualizationViewer<Integer,Integer>(layout, new Dimension(1200, 900));
+		vv = new VisualizationViewer<Integer,Integer>(layout, new Dimension(1200, 900)){
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = -5247947698370164030L;
+
+			public JToolTip createToolTip() {
+				if (onVertex) {
+					onVertex = false;
+					ToolTipManager.sharedInstance().setReshowDelay(0);
+					ToolTipManager.sharedInstance().setInitialDelay(0);
+					return molToolTip;
+				} else {
+					return new JToolTip();
+				}
+			}
+		};
 		vv.setBackground(Color.white);
+		vv.setGraphMouse(graphMouse);
 		//Tell the renderer to use our own customized color rendering
 		vv.getRenderContext().setVertexFillPaintTransformer(MapTransformer.<Integer,Paint>getInstance(vertexPaints));
 		vv.getRenderContext().setVertexDrawPaintTransformer(new Transformer<Integer,Paint>() {
@@ -126,26 +175,64 @@ public class GraphView extends JPanel {
 					return Color.BLACK;						}
 			}
 		});
-
-		vv.getRenderContext().setEdgeDrawPaintTransformer(MapTransformer.<Integer,Paint>getInstance(edgePaints));
-		vv.getRenderContext().setEdgeStrokeTransformer(new Transformer<Integer,Stroke>() {
-			protected final Stroke THIN = new BasicStroke(1);
-			protected final Stroke THICK= new BasicStroke(2);
-			public Stroke transform(Integer e)
-			{
-				Paint c = edgePaints.get(e);
-				if (c == Color.LIGHT_GRAY)
-					return THIN;
-				else 
-					return THICK;
+		
+        vv.setVertexToolTipTransformer(new Transformer<Integer, String>() {			
+			@Override
+			public String transform(Integer v) {
+				Molecule mol = vertexMap.get(v);
+				onVertex = true;
+				ToolTipManager.sharedInstance().setEnabled(true);
+				//System.out.println(vertexMap + " " + graph.getVertexCount());
+				try {
+					tdp1.setMol(mol.getMol());				
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				return mol.getMolID();
 			}
 		});
+        vv.getRenderer().getVertexLabelRenderer().setPosition(Renderer.VertexLabel.Position.W);        
+        vv.getRenderContext().setVertexLabelTransformer(new ToStringLabeller());
+        
+//		vv.getRenderContext().setEdgeDrawPaintTransformer(MapTransformer.<Integer,Paint>getInstance(edgePaints));
+//		vv.getRenderContext().setEdgeStrokeTransformer(new Transformer<Integer,Stroke>() {
+//			protected final Stroke THIN = new BasicStroke(1);
+//			protected final Stroke THICK= new BasicStroke(2);
+//			public Stroke transform(Integer e)
+//			{
+//				Paint c = edgePaints.get(e);
+//				if (c == Color.LIGHT_GRAY)
+//					return THIN;
+//				else 
+//					return THICK;
+//			}
+//		});
 		
 		//add restart button
 		JButton scramble = new JButton("Restart");
 		scramble.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				Layout layout = vv.getGraphLayout();
+				//Layout layout = vv.getGraphLayout();
+				SwingWorker<Layout, Void> worker 
+				= new SwingWorker<Layout, Void>() {				 
+					@Override
+					public Layout doInBackground() {
+						Layout lt = vv.getGraphLayout();
+						lt.initialize();
+						return lt;
+					}
+
+					public void done() {
+						try {
+							layout = (AggregateLayout<Integer, Integer>) get();
+						} catch (InterruptedException | ExecutionException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				};
+				//worker.execute();
 				layout.initialize();
 				Relaxer relaxer = vv.getModel().getRelaxer();
 				if(relaxer != null) {
@@ -157,8 +244,8 @@ public class GraphView extends JPanel {
 
 		});
 		
-		DefaultModalGraphMouse gm = new DefaultModalGraphMouse();
-		vv.setGraphMouse(gm);
+//		DefaultModalGraphMouse gm = new DefaultModalGraphMouse();
+//		vv.setGraphMouse(gm);
 		
 		//Create slider to adjust the number of edges to remove when clustering
 		final JSlider edgeBetweennessSlider = new JSlider(JSlider.HORIZONTAL);
@@ -181,7 +268,7 @@ public class GraphView extends JPanel {
 		eastControls.add(Box.createVerticalGlue());
 		eastControls.add(edgeBetweennessSlider);
 
-		final String COMMANDSTRING = "Edges removed for clusters: ";
+		final String COMMANDSTRING = "Edges removed: ";
 		final String eastSize = COMMANDSTRING + edgeBetweennessSlider.getValue();
 		
 		final TitledBorder sliderBorder = BorderFactory.createTitledBorder(eastSize);
@@ -189,7 +276,7 @@ public class GraphView extends JPanel {
 		//eastControls.add(eastSize);
 		eastControls.add(Box.createVerticalGlue());
 		
-		clusterAndRecolor(layout, 0, similarColors);
+		clusterAndRecolor(0, similarColors);
 		
 		edgeBetweennessSlider.addChangeListener(new ChangeListener() {
 			private int numEdgesToRemove;
@@ -199,16 +286,18 @@ public class GraphView extends JPanel {
 				if (!source.getValueIsAdjusting()) {
 					this.numEdgesToRemove = source.getValue();
 					SwingWorker<Void, Void> worker 
-				       = new SwingWorker<Void, Void>() {				 
-				       @Override
-				       public Void doInBackground() {
-				    	 clusterAndRecolor(layout, numEdgesToRemove, similarColors);
-				    	 return null;
-				       }
-				     };
-				     worker.execute();
+					= new SwingWorker<Void, Void>() {				 
+						@Override
+						public Void doInBackground() {
+							clusterAndRecolor(numEdgesToRemove, similarColors);
+							vv.validate();
+							vv.repaint();
+							return null;
+						}
+					};
+					worker.execute();
 					sliderBorder.setTitle(
-						COMMANDSTRING + edgeBetweennessSlider.getValue());
+							COMMANDSTRING + edgeBetweennessSlider.getValue());
 					eastControls.repaint();
 					vv.validate();
 					vv.repaint();
@@ -225,7 +314,7 @@ public class GraphView extends JPanel {
 		south.add(eastControls);
 		JPanel p = new JPanel();
 		p.setBorder(BorderFactory.createTitledBorder("Mouse Mode"));
-		p.add(gm.getModeComboBox());
+		p.add(graphMouse.getModeComboBox());
 		south.add(p);
 		
 		this.setLayout(new BorderLayout(0, 0));
@@ -237,8 +326,7 @@ public class GraphView extends JPanel {
 	
 	public void update() {
 		this.removeAll();
-		//initVviewer ivv = new initVviewer();
-		//ivv.execute();
+		initFactories();
 		initVV();
 	}
 	
@@ -246,14 +334,17 @@ public class GraphView extends JPanel {
 		//super();
 		this.heat = heat;
 		this.norm = norm;
-		//this.molIndex = molIndex;
 		initFactories();
-		//initVviewer ivv = new initVviewer();
-		//ivv.execute();
-		initVV();
+		try {
+			initTip();
+			initVV();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
-	public void clusterAndRecolor(AggregateLayout<Integer,Integer> layout,
+	public void clusterAndRecolor(
 			int numEdgesToRemove,
 			Color[] colors) {
 			//Now cluster the vertices by removing the top 50 edges with highest betweenness
@@ -261,12 +352,12 @@ public class GraphView extends JPanel {
 			//			colorCluster( g.getVertices(), colors[0] );
 			//		} else {
 			
-			Graph<Integer,Integer> g = layout.getGraph();
-	        layout.removeAll();
+			//Graph<Integer,Integer> g = layout.getGraph();
+	        //layout.removeAll();
 
 			EdgeBetweennessClusterer<Integer,Integer> clusterer =
 				new EdgeBetweennessClusterer<Integer,Integer>(numEdgesToRemove);
-			Set<Set<Integer>> clusterSet = clusterer.transform(g);
+			Set<Set<Integer>> clusterSet = clusterer.transform(graph);
 			List<Integer> edges = clusterer.getEdgesRemoved();
 
 			int i = 0;
@@ -279,14 +370,16 @@ public class GraphView extends JPanel {
 				colorCluster(vertices, c);
 				i++;
 			}
-			for (Integer e : g.getEdges()) {
-
-				if (edges.contains(e)) {
-					edgePaints.put(e, Color.lightGray);
-				} else {
-					edgePaints.put(e, Color.black);
-				}
-			}
+			
+//	Keep edges colouring out as it slows down for large |E|			
+//			for (Integer e : graph.getEdges()) {
+//
+//				if (edges.contains(e)) {
+//					edgePaints.put(e, Color.lightGray);
+//				} else {
+//					edgePaints.put(e, Color.black);
+//				}
+//			}
 
 		}
 
@@ -296,22 +389,6 @@ public class GraphView extends JPanel {
 			}
 		}
 		
-//		private void groupCluster(AggregateLayout<Integer,Integer> layout, Set<Integer> vertices) {
-//			if(vertices.size() < layout.getGraph().getVertexCount()) {
-//				Point2D center = layout.transform(vertices.iterator().next());
-//				Graph<Integer,Integer> subGraph = SparseMultigraph.<Integer,Integer>getFactory().create();
-//				for(Integer v : vertices) {
-//					subGraph.addVertex(v);
-//				}
-//				Layout<Integer,Integer> subLayout = 
-//					new CircleLayout<Integer,Integer>(subGraph);
-//				subLayout.setInitializer(vv.getGraphLayout());
-//				subLayout.setSize(new Dimension(40,40));
-//
-//				layout.put(subLayout,center);
-//				vv.repaint();
-//			}
-//		}
 
 	/**
 	 * @param args
@@ -336,7 +413,7 @@ public class GraphView extends JPanel {
 				molec.setMolID(Integer.toString(cnt + 100000));
 				map.add(molec);
 				++cnt;
-				if (cnt == 5) break;
+				if (cnt == 10) break;
 			}
 			AdjMatrix adm = new AdjMatrix(map);
 			SideDisplay disp = new SideDisplay();
@@ -359,12 +436,12 @@ public class GraphView extends JPanel {
 			}
 			++j;
 			}
-			
-			
+						
 		   JFrame frame = new JFrame();
 	        Container content = frame.getContentPane();
 	        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	        GraphView pt = new GraphView(heat, 100);
+	        pt.update();
 	        //pt.setMolIndex(molIndex);
 	        content.add(pt);
 	        frame.pack();
