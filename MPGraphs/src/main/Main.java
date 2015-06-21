@@ -387,6 +387,7 @@ public class Main extends JPanel {
 		mntmAbout.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				JOptionPane.showMessageDialog(null, "(c) 2015 Kostas Papadopoulos\n\n" +
+			"Pre-alpha\n" +
 			"No guarantees that anything will work as expected\n", "About",
 					    JOptionPane.PLAIN_MESSAGE);
 			}

@@ -62,6 +62,10 @@ import edu.uci.ics.jung.visualization.control.DefaultModalGraphMouse;
 import edu.uci.ics.jung.visualization.decorators.ToStringLabeller;
 import edu.uci.ics.jung.visualization.renderers.Renderer;
 
+import cern.colt.matrix.DoubleMatrix2D;
+import cern.colt.matrix.impl.DenseDoubleMatrix2D;
+import cern.colt.matrix.impl.DenseObjectMatrix2D;
+
 public class GraphView extends JPanel {
 	/**
 	 * 
@@ -78,9 +82,9 @@ public class GraphView extends JPanel {
 	private Map<Integer,Paint> vertexPaints = 
 			LazyMap.<Integer,Paint>decorate(new HashMap<Integer,Paint>(),
 					new ConstantTransformer(Color.white));
-//	private Map<Integer,Paint> edgePaints =
-//		LazyMap.<Integer,Paint>decorate(new HashMap<Integer,Paint>(),
-//				new ConstantTransformer(Color.blue));
+	private Map<Integer,Paint> edgePaints =
+		LazyMap.<Integer,Paint>decorate(new HashMap<Integer,Paint>(),
+				new ConstantTransformer(Color.blue));
 	
 	private boolean onVertex = false;
 	private StructureDisplay tdp1;
@@ -113,6 +117,8 @@ public class GraphView extends JPanel {
 		vertexFactory = new Factory<Integer>() {
 			int count = 0;		// assuming the order of vertices is the same as in adm.getmolArr
 			public Integer create() {
+				Molecule mol = heat.getMolArray()[count];
+				vertexMap.put(count, mol);
 				return count++;
 			}};
 		edgeFactory = new Factory<Integer>() {
@@ -136,14 +142,23 @@ public class GraphView extends JPanel {
 	}
 	
 	private void initVV() {
-		graph = GraphMatrixOperations .matrixToGraph(heat.getMatrix(),
-				graphFactory, vertexFactory, edgeFactory);
 		
-		vertexMap = new HashMap<>();
-		for (int i = 0; i < heat.getMolArray().length; ++i) {
-				Molecule mol = heat.getMolArray()[i];
-				vertexMap.put(i, mol);
+		DoubleMatrix2D matrix = heat.getMatrix().copy();
+		for (int i = 0; i < matrix.rows(); ++i) {
+			for (int j = i + 1; j < matrix.rows(); ++j) {
+				matrix.setQuick(i, j, 0.0);
 			}
+		}
+		
+		graph = GraphMatrixOperations.matrixToGraph(matrix,
+				graphFactory, vertexFactory, edgeFactory);
+				
+//		for (int i = 0; i < heat.getMolArray().length; ++i) {
+//				Molecule mol = heat.getMolArray()[i];
+//				vertexMap.put(i, mol);
+//			}
+		
+		
 		layout = new AggregateLayout<Integer,Integer>(new FRLayout<Integer,Integer>(graph));
 		layout.setSize(new Dimension(1200, 800));
 		vv = new VisualizationViewer<Integer,Integer>(layout, new Dimension(1200, 900)){
@@ -195,19 +210,19 @@ public class GraphView extends JPanel {
         vv.getRenderer().getVertexLabelRenderer().setPosition(Renderer.VertexLabel.Position.W);        
         vv.getRenderContext().setVertexLabelTransformer(new ToStringLabeller());
         
-//		vv.getRenderContext().setEdgeDrawPaintTransformer(MapTransformer.<Integer,Paint>getInstance(edgePaints));
-//		vv.getRenderContext().setEdgeStrokeTransformer(new Transformer<Integer,Stroke>() {
-//			protected final Stroke THIN = new BasicStroke(1);
-//			protected final Stroke THICK= new BasicStroke(2);
-//			public Stroke transform(Integer e)
-//			{
-//				Paint c = edgePaints.get(e);
-//				if (c == Color.LIGHT_GRAY)
-//					return THIN;
-//				else 
-//					return THICK;
-//			}
-//		});
+		vv.getRenderContext().setEdgeDrawPaintTransformer(MapTransformer.<Integer,Paint>getInstance(edgePaints));
+		vv.getRenderContext().setEdgeStrokeTransformer(new Transformer<Integer,Stroke>() {
+			protected final Stroke THIN = new BasicStroke(1);
+			protected final Stroke THICK= new BasicStroke(2);
+			public Stroke transform(Integer e)
+			{
+				Paint c = edgePaints.get(e);
+				if (c == Color.LIGHT_GRAY)
+					return THIN;
+				else 
+					return THICK;
+			}
+		});
 		
 		//add restart button
 		JButton scramble = new JButton("Restart");
@@ -326,6 +341,7 @@ public class GraphView extends JPanel {
 	
 	public void update() {
 		this.removeAll();
+		vertexMap = new HashMap<>();
 		initFactories();
 		initVV();
 	}
@@ -334,6 +350,7 @@ public class GraphView extends JPanel {
 		//super();
 		this.heat = heat;
 		this.norm = norm;
+		vertexMap = new HashMap<>();
 		initFactories();
 		try {
 			initTip();
@@ -353,7 +370,7 @@ public class GraphView extends JPanel {
 			//		} else {
 			
 			//Graph<Integer,Integer> g = layout.getGraph();
-	        //layout.removeAll();
+	        layout.removeAll();
 
 			EdgeBetweennessClusterer<Integer,Integer> clusterer =
 				new EdgeBetweennessClusterer<Integer,Integer>(numEdgesToRemove);
@@ -371,15 +388,15 @@ public class GraphView extends JPanel {
 				i++;
 			}
 			
-//	Keep edges colouring out as it slows down for large |E|			
-//			for (Integer e : graph.getEdges()) {
-//
-//				if (edges.contains(e)) {
-//					edgePaints.put(e, Color.lightGray);
-//				} else {
-//					edgePaints.put(e, Color.black);
-//				}
-//			}
+//	Keep edges colouring out as it slows down for large |E|	?		
+			for (Integer e : graph.getEdges()) {
+
+				if (edges.contains(e)) {
+					edgePaints.put(e, Color.lightGray);
+				} else {
+					edgePaints.put(e, Color.black);
+				}
+			}
 
 		}
 
@@ -413,12 +430,12 @@ public class GraphView extends JPanel {
 				molec.setMolID(Integer.toString(cnt + 100000));
 				map.add(molec);
 				++cnt;
-				if (cnt == 10) break;
+				//if (cnt == 10) break;
 			}
 			AdjMatrix adm = new AdjMatrix(map);
 			SideDisplay disp = new SideDisplay();
 			HeatMap heat = new HeatMap(adm, true, disp, Gradient.GRADIENT_RED_TO_GREEN);
-			
+
 			int molIndex = 0;
 			int j = 0;
 			int max = 0;
