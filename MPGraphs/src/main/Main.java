@@ -11,10 +11,8 @@ import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.ExecutionException;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -36,9 +34,8 @@ import javax.swing.border.BevelBorder;
 import javax.swing.border.SoftBevelBorder;
 import javax.swing.event.MouseInputAdapter;
 
-import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.graph.ConnectivityChecker;
 import org.openscience.cdk.interfaces.IAtomContainer;
-import org.openscience.cdk.interfaces.IBond;
 import org.openscience.smsd.tools.ExtAtomContainerManipulator;
 //import org.openscience.cdk.smsd.tools.MoleculeSanityCheck;
 
@@ -88,9 +85,9 @@ public class Main extends JPanel {
 				IAtomContainer cleanedMol = ExtAtomContainerManipulator.checkAndCleanMolecule(mol);
 				
 				//IAtomContainer cleanedMol = MoleculeSanityCheck.checkAndCleanMolecule(mol);
-//				if (!ConnectivityChecker.isConnected(mol)) {
-//					continue;
-//					}
+				if (!ConnectivityChecker.isConnected(cleanedMol)) {
+					continue;
+					}
 				
 				String val = sdf.sdfMap().get(mol)[fieldInd];
 				if (val == null || mol.getAtomCount() == 0) {
@@ -110,7 +107,7 @@ public class Main extends JPanel {
 				}				
 				set.add(molec);
 				++cnt;
-				if (cnt == 20) break;
+				//if (cnt == 40) break;
 			}
 			return new AdjMatrix(set, progressBar);
 		}
