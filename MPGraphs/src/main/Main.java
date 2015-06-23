@@ -37,10 +37,10 @@ import javax.swing.border.SoftBevelBorder;
 import javax.swing.event.MouseInputAdapter;
 
 import org.openscience.cdk.exception.CDKException;
-import org.openscience.cdk.graph.ConnectivityChecker;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.smsd.tools.ExtAtomContainerManipulator;
+//import org.openscience.cdk.smsd.tools.MoleculeSanityCheck;
 
 import viewer.GraphView;
 import viewer.HeatMap;
@@ -84,20 +84,24 @@ public class Main extends JPanel {
 			String s = sdf.fieldStr()[fieldInd];
 			if (s == null) s = "";
 			for (IAtomContainer mol : sdf.sdfMap().keySet()) {
-				if (!ConnectivityChecker.isConnected(mol)) {
-					continue;
-					}
+				
+				IAtomContainer cleanedMol = ExtAtomContainerManipulator.checkAndCleanMolecule(mol);
+				
+				//IAtomContainer cleanedMol = MoleculeSanityCheck.checkAndCleanMolecule(mol);
+//				if (!ConnectivityChecker.isConnected(mol)) {
+//					continue;
+//					}
 				
 				String val = sdf.sdfMap().get(mol)[fieldInd];
 				if (val == null || mol.getAtomCount() == 0) {
 					continue;
 				}
 				
-//				ExtAtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol);
-//				mol = ExtAtomContainerManipulator.removeHydrogens(mol);
-//				ExtAtomContainerManipulator.aromatizeCDK(mol);
+				ExtAtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(cleanedMol);
+				cleanedMol = ExtAtomContainerManipulator.removeHydrogens(cleanedMol);
+				ExtAtomContainerManipulator.aromatizeCDK(cleanedMol);
 
-				Molecule molec = new Molecule(mol, Double.parseDouble(val), s);
+				Molecule molec = new Molecule(cleanedMol, Double.parseDouble(val), s);
 				if (idInd == 0) {
 					molec.setMolID("ID " + Integer.toString(cnt + 1));
 				} else {
@@ -106,7 +110,7 @@ public class Main extends JPanel {
 				}				
 				set.add(molec);
 				++cnt;
-				if (cnt == 80) break;
+				if (cnt == 20) break;
 			}
 			return new AdjMatrix(set, progressBar);
 		}
