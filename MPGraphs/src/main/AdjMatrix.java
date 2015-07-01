@@ -124,7 +124,8 @@ public class AdjMatrix {
 				if (pair == null) continue;
 
 				if (ConnectivityChecker.isConnected(pair[0]) && 
-						ConnectivityChecker.isConnected(pair[1])) {
+						ConnectivityChecker.isConnected(pair[1]) &&
+						mcsp.isValid()) {
 					connMatrix.set(i, j, -diff);
 					MCSMatrix.set(i, j, mcsp);
 					connMatrix.set(j, i, +diff);

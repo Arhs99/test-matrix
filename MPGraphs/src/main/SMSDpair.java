@@ -3,7 +3,10 @@ import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -39,10 +42,7 @@ public final class SMSDpair{
 	private SmilesGenerator sg = SmilesGenerator.absolute().aromatic(); 
 	
 	public SMSDpair(IAtomContainer mol1, IAtomContainer mol2) throws CDKException, CloneNotSupportedException {
-
-		
-		
-		
+	
 		ExtAtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol1);
 		ExtAtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol2);
 
@@ -159,7 +159,6 @@ public final class SMSDpair{
 		for (IAtom atom : toDel2) {
 			Mol2.removeAtomAndConnectedElectronContainers(atom);
 		}
-
 		
 		pair[0] = Mol1;
 		pair[1] = Mol2;
@@ -178,9 +177,9 @@ public final class SMSDpair{
 		return targetHL;
 	}
 	
-	public Isomorphism getSMSD() {
-		return smsd;
-	}
+//	public Isomorphism getSMSD() {
+//		return smsd;
+//	}
 	
 	/**
 	 * @return array of indices of connection atoms in query AtomContainer
@@ -196,46 +195,70 @@ public final class SMSDpair{
 		return trgConnAtom;
 	}
 	
-	public static void main(String[] args) throws Exception {
-
-		SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
-		IAtomContainer mol1 = sp.parseSmiles("[H]O[C@](C([H])([H])[H])(C([H])([H])C([H])([H])[H])C([H])([H])C([H])([H])C([H])([H])[H]"); //(args[0]);
-		IAtomContainer mol2 = sp.parseSmiles("[H]O[C@](C([H])([H])[H])(C([H])([H])C([H])([H])C([H])([H])[H])C([H])([H])C([H])([H])[H]"); //(args[1]);
-		StructureDiagramGenerator sdg = new StructureDiagramGenerator();
-        sdg.setMolecule(mol1.clone());
-		sdg.generateCoordinates();
-        mol1 = sdg.getMolecule();
-        sdg.setMolecule(mol2.clone());
-		sdg.generateCoordinates();
-        mol2 = sdg.getMolecule();
-		SMSDpair mcsp = new SMSDpair(mol1, mol2);
-		
-		JPanel panel = new JPanel();
-		panel.setPreferredSize(new Dimension(1500, 600));
-		StructureDisplay tdp1 = new StructureDisplay(mcsp.rxnmol());//(mcsp.query);
-		panel.add(tdp1);
-		StructureDisplay tdp2 = new StructureDisplay(mcsp.target);
-		panel.add(tdp2);
-		StructureDisplay tdp3 = new StructureDisplay(mcsp.getSMSD().getQuery());// pairDiff()[0]);
-		//tdp1.highlightSelect(mcsp.queryHi()); //keyset for query molecule
-		panel.add(tdp3);
-		StructureDisplay tdp4 = new StructureDisplay(mcsp.getSMSD().getTarget()); //pairDiff()[1]);
-		tdp2.highlightSelect(mcsp.targetHi()); //values for target molecule
-		panel.add(tdp4);
-		
-
-
-		final JFrame f = new JFrame("Test");
-		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		f.getContentPane().setPreferredSize(new Dimension(1500, 600));
-		f.getContentPane().add(panel);
-
-		javax.swing.SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				f.pack();
-				f.setVisible(true);
-			}
-		});
-
+	public boolean isValid() throws CDKException, Exception {
+		//if (queryFrag().equals(targetFrag())) return true;
+		if (pairDiff()[0].equals(pairDiff()[1])) return true; // test if 'equals' does what we expect
+		Map<Integer, Integer> map = smsd.getFirstAtomMapping().getMappingsByIndex();
+		Set<Integer> tSet = new HashSet<>(this.getTrgConnAtom());
+		for (int i : this.getQryConnAtom()) {
+			Integer img = map.get(i);
+			System.out.println(i + " " + img);
+			if (img == null) return false;
+			if (!tSet.contains(img)) return false;
+		}
+		return true;
 	}
+	
+//	public static void main(String[] args) throws Exception {
+//
+//		SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+//		IAtomContainer mol1 = sp.parseSmiles("FC1CCC([H])C(C)C1"); //(args[0]);
+//		IAtomContainer mol2 = sp.parseSmiles("CC1CC(Cl)CCC1"); //(args[1]);
+//		StructureDiagramGenerator sdg = new StructureDiagramGenerator();
+//        sdg.setMolecule(mol1.clone());
+//		sdg.generateCoordinates();
+//        mol1 = sdg.getMolecule();
+//        sdg.setMolecule(mol2.clone());
+//		sdg.generateCoordinates();
+//        mol2 = sdg.getMolecule();
+//		SMSDpair mcsp = new SMSDpair(mol1, mol2);
+//		
+//		System.out.println(mcsp.getSMSD().getAllAtomMapping());
+//		IAtomContainer q1 = mcsp.getSMSD().getFirstAtomMapping().getMapCommonFragmentOnQuery();
+//		IAtomContainer t1 = mcsp.getSMSD().getFirstAtomMapping().getMapCommonFragmentOnTarget();
+//		IAtomContainer com = mcsp.getSMSD().getFirstAtomMapping().getCommonFragment();
+//		System.out.println(mcsp.getQryConnAtom());
+//		System.out.println(mcsp.getTrgConnAtom());
+//		
+//		JPanel panel = new JPanel();
+//		panel.setPreferredSize(new Dimension(1500, 600));
+//		StructureDisplay tdp1 = new StructureDisplay(mcsp.rxnmol());//(mcsp.query);
+//		panel.add(tdp1);
+//		StructureDisplay tdp2 = new StructureDisplay(mcsp.prdmol());
+//		panel.add(tdp2);
+//		StructureDisplay tdp3 = new StructureDisplay(q1);
+//		//tdp1.highlightSelect(mcsp.queryHi()); //keyset for query molecule
+//		panel.add(tdp3);
+//		StructureDisplay tdp4 = new StructureDisplay(com);
+//		//tdp2.highlightSelect(mcsp.targetHi()); //values for target molecule
+//		panel.add(tdp4);
+//		System.out.println(mcsp.pairDiff()[0]);
+//		System.out.println(mcsp.pairDiff()[1]);
+//		System.out.println(mcsp.isValid());
+//		
+//
+//
+//		final JFrame f = new JFrame("Test");
+//		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//		f.getContentPane().setPreferredSize(new Dimension(1500, 600));
+//		f.getContentPane().add(panel);
+//
+//		javax.swing.SwingUtilities.invokeLater(new Runnable() {
+//			public void run() {
+//				f.pack();
+//				f.setVisible(true);
+//			}
+//		});
+//
+//	}
 }
