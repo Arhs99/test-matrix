@@ -107,7 +107,7 @@ public class Main extends JPanel {
 				}				
 				set.add(molec);
 				++cnt;
-				if (cnt == 60) break;
+				if (cnt == 40) break;
 			}
 			return new AdjMatrix(set, progressBar);
 		}
