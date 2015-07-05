@@ -220,18 +220,32 @@ public final class SMSDpair{
 		return trgConnAtom;
 	}
 	
-	
+	/**
+	 * @return distance of qryConn and targetCon atoms refernced on qryConn atom
+	 */
+	public int distQT() {
+		if (!getQryConnAtom().isEmpty() && !getTrgConnAtom().isEmpty() &&
+				!atMapping.getMappingsByIndex().isEmpty()) {
+			int qry = getQryConnAtom().get(0);
+			int tar = getTrgConnAtom().get(0);
+			Integer ref = atMapping.getMappingsByIndex().get(tar);
+			if (ref == null) return 99;
+			ShortestPaths sp = new ShortestPaths(query, query.getAtom(qry));
+			return sp.distanceTo(query.getAtom(ref));
+		}
+		return 99;
+	}
 	public boolean isValid() throws CDKException, Exception {
 		if (!ConnectivityChecker.isConnected(pair[0]) || 
 				!ConnectivityChecker.isConnected(pair[1])) {
 			return false;
 		}
-//		ShortestPaths sp = new ShortestPaths(query, query.getAtom(getQryConnAtom().get(0)));	
-//		System.out.println(getQryConnAtom() + " " + getTrgConnAtom() + " " +
-//				atMapping.getMappingsByIndex().get(getTrgConnAtom().get(0)) + " " +
-//				sp.distanceTo(query.getAtom(atMapping.getMappingsByIndex().get(getTrgConnAtom().get(0)))));
-//			
-		if (queryFrag().equals(targetFrag())) {
+
+		//System.out.println(distQT());
+		if (queryFrag().equals(targetFrag()) && distQT() < 4) {
+		//checking if qry and target fragments are identical and so no need to check if they are 
+		//attached to the same atom in the MCS **unless** their distance is >= 4
+		//correct is to check if they are on same ring rather than their distance **ToDO**
 			return true;
 		}
 		
@@ -250,7 +264,7 @@ public final class SMSDpair{
 
 		SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
 		IAtomContainer mol1 = sp.parseSmiles("FCCOC1CCC([H])C(CCCCCCCC)C1"); //(args[0]);
-		IAtomContainer mol2 = sp.parseSmiles("CCCCCCCCC1CCC(OCCF)CC1"); //(args[1]);
+		IAtomContainer mol2 = sp.parseSmiles("CCCCCCCCC1C(OCCF)CCCC1"); //(args[1]);
 		StructureDiagramGenerator sdg = new StructureDiagramGenerator();
         sdg.setMolecule(mol1.clone());
 		sdg.generateCoordinates();

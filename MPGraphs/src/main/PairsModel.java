@@ -79,6 +79,7 @@ public class PairsModel {
     }
 	
 	public class MolTransf implements Comparable<MolTransf> {
+
 		private int direction;
 		private String left;
 		private String right;
@@ -138,14 +139,14 @@ public class PairsModel {
 			}
 			}
 			
-			if (s1.compareTo(s2) > 0) {
+			if (s1.compareTo(s2) > 0 || s1.equals(s2)) {
 				left = s1;
 				right = s2;
 				direction = 1;
 			} else {
-				left = s1;
-				right = s2;
-				direction = 1;
+				left = s2;
+				right = s1;
+				direction = -1;
 			}
 		}
 		
@@ -169,7 +170,14 @@ public class PairsModel {
 			return direction;
 		}
 		
-		
+		public String getLeft() {
+			return left;
+		}
+
+		public String getRight() {
+			return right;
+		}
+
 		@Override
 		public int hashCode() {
 			return this.toString().hashCode();
@@ -276,13 +284,17 @@ public class PairsModel {
 			keys.add(arr[i]);
 			hash.put(trArr.get(arr[i]), keys);
 			
-			MolTransf inv = trArr.get(arr[i]).invPair();		//insert the inverse transforms too
-			keys = hash.get(inv);
-			if (keys == null) {
-				keys = new ArrayList<>();
+			if (!trArr.get(arr[i]).left.equals(trArr.get(arr[i]).right)) {
+				//insert the inverse transforms too but not when left == right
+				MolTransf inv = trArr.get(arr[i]).invPair();		
+				keys = hash.get(inv);
+				if (keys == null) {
+					keys = new ArrayList<>();
+				}
+				keys.add(arr[i]);
+				hash.put(inv, keys);
 			}
-			keys.add(arr[i]);
-			hash.put(inv, keys);			
+						
 		}
 	// tree to store previous table in order of frequency of key transformation
 		TreeMap<MolTransf, ArrayList<Integer>>transfMap = new TreeMap<>

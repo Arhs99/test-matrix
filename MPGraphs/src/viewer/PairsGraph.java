@@ -90,11 +90,13 @@ public class PairsGraph  extends JPanel {
 		TreeMap<MolTransf, ArrayList<Integer>> map = pm.TransfClustMap(clustInd);
 		arr = (ArrayList<Integer>) map.values().toArray()[transfInd];
 		dPMap = new HashMap<>();
+		MolTransf mt = (MolTransf) map.keySet().toArray()[transfInd];
+		int direction = mt.getLeft().compareTo(mt.getRight()) < 0 ? -1 : 1;
 		for (int i = 0; i < arr.size(); ++i) {
 			g.addVertex(i);
 			int ind = arr.get(i);
-			MolTransf mt = (MolTransf) map.keySet().toArray()[transfInd];
-			Double dP = pm.getdPArr().get(ind) * mt.getDirection();
+			int d = pm.getTrArr().get(ind).getDirection();
+			Double dP = pm.getdPArr().get(ind) * direction * d;
 			dPMap.put(i, dP);
 		}
 		min = Collections.min(dPMap.values());
@@ -123,8 +125,6 @@ public class PairsGraph  extends JPanel {
 				
 				Double x = 40 + ((W - 50.0)/dPMap.size()) * (i );
 				Double y = (H/2) - (H/2 - 60) *  dPMap.get(i) / yBound;
-				//System.out.println(x + ", " + y + " " + yBound);
-				//System.out.println(dPMap.values());
 				return new Point2D.Double(x, y);
 			}
 		});
@@ -150,7 +150,9 @@ public class PairsGraph  extends JPanel {
 				Molecule target;
 				Collection<Integer> queryHi;
 				Collection<Integer> targetHi;
-				if (mt.getDirection() > 0) {
+				int direction = mt.getLeft().compareTo(mt.getRight()) < 0 ? -1 : 1;
+				int d = pm.getTrArr().get(index).getDirection();
+				if (d * direction > 0) {
 					query = pm.getqArr().get(index);
 					target = pm.gettArr().get(index);
 					queryHi = pm.getqHilArr().get(index);
