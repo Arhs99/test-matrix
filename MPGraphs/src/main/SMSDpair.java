@@ -1,9 +1,14 @@
 package main;
 import java.awt.Dimension;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -11,6 +16,8 @@ import javax.swing.JPanel;
 import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.graph.ConnectivityChecker;
+import org.openscience.cdk.graph.ShortestPaths;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
@@ -36,13 +43,11 @@ public final class SMSDpair{
 	private AtomAtomMapping atMapping;
 	private ArrayList<Integer> qryConnAtom;
 	private ArrayList<Integer> trgConnAtom;
-	private SmilesGenerator sg = SmilesGenerator.absolute().aromatic(); 
+	private SmilesGenerator sg = SmilesGenerator.unique(); //absolute().aromatic(); 
+	private IAtomContainer[] pair;
 	
-	public SMSDpair(IAtomContainer mol1, IAtomContainer mol2) throws CDKException, CloneNotSupportedException {
-
-		
-		
-		
+	public SMSDpair(IAtomContainer mol1, IAtomContainer mol2) throws Exception {
+	
 		ExtAtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol1);
 		ExtAtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol2);
 
@@ -55,6 +60,10 @@ public final class SMSDpair{
 		if (smsd != null) {
 			this.query = smsd.getQuery();
 			this.target = smsd.getTarget();
+		
+		this.pair = new IAtomContainer[2];
+		
+		setPairDiff();
 		
 		atMapping = smsd.getFirstAtomMapping();
 		//atMapping = smsd.getAllAtomMapping().get(0);
@@ -89,9 +98,11 @@ public final class SMSDpair{
 				}
 			}
 		}
-		}
 		
+		}
+				
 	}
+	
 	public IAtomContainer rxnmol() {
 		return smsd.getQuery();
 		//return query;
@@ -104,65 +115,103 @@ public final class SMSDpair{
 	
 	/**
 	 * @return SMILES absolute representation of query fragment
+	 * @throws CloneNotSupportedException 
 	 * @throws CDKException
 	 * @throws Exception
 	 */
-	public String queryFrag() throws CDKException, Exception {
-		return sg.create(this.pairDiff()[0]);
+	public String queryFrag() throws CloneNotSupportedException {
+		try {
+			IAtomContainer ac1 = this.pairDiff()[0].clone();
+			for (IAtom a : ac1.atoms()) {
+				if (a.getImplicitHydrogenCount() == null)
+					a.setImplicitHydrogenCount(0);
+			}
+			return sg.create(ac1);
+		} catch (CDKException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return "";
+		}
 	}
 	
 	/**
 	 * @return SMILES absolute representation of target fragment
+	 * @throws CloneNotSupportedException 
 	 * @throws CDKException
 	 * @throws Exception
 	 */
-	public String targetFrag() throws CDKException, Exception {
-		return sg.create(this.pairDiff()[1]);
+	public String targetFrag() throws CloneNotSupportedException {
+		
+		try {
+			IAtomContainer ac1 = this.pairDiff()[1].clone();
+			for (IAtom a : ac1.atoms()) {
+				if (a.getImplicitHydrogenCount() == null)
+					a.setImplicitHydrogenCount(0);
+			}
+			return sg.create(ac1);
+		} catch (CDKException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return "";
+		}
 	}
 	
-	public IAtomContainer[] pairDiff() throws CloneNotSupportedException, Exception {		// 0 query, 1 target
+	private void setPairDiff() throws CloneNotSupportedException, Exception {		// 0 query, 1 target
+		IAtomContainer Mol1 = smsd.getQuery().clone();
+		IAtomContainer Mol2 = smsd.getTarget().clone();
 
-		IAtomContainer[] pair = new IAtomContainer[2];
-		IAtomContainer Mol1 = smsd.getQuery();
-		IAtomContainer Mol2 = smsd.getTarget();
-
-		ArrayList<IAtom> toDel1 = new ArrayList<>();
-		ArrayList<IAtom> toDel2 = new ArrayList<>();
-		ArrayList<IBond> bond1 = new ArrayList<>();
-		ArrayList<IBond> bond2 = new ArrayList<>();
+		ArrayList<Integer> toDel1 = new ArrayList<>();
+		ArrayList<Integer> toDel2 = new ArrayList<>();
+//		ArrayList<IBond> bond1 = new ArrayList<>();
+//		ArrayList<IBond> bond2 = new ArrayList<>();
+//		System.out.println(Mol1.getAtom(5));
+//		System.out.println(smsd.getQuery().getAtom(5));
+//		System.out.println(Mol2.getAtom(5));
+//		System.out.println(smsd.getTarget().getAtom(5));
 		
-		if (smsd.getFirstAtomMapping() == null) {
-			return null;
-		}
+//		if (smsd.getFirstAtomMapping() == null) {
+//			return;
+//		}
 
-		for(IBond bond : Mol1.bonds()) {
-			bond1.add(bond);
-			
-		}
-		
-		for(IBond bond : Mol2.bonds()) {
-			bond2.add(bond);
-		}
-
+		//System.out.println(smsd.getFirstAtomMapping().getMappingsByIndex());
 		
 		for (Entry<IAtom, IAtom> mapping: smsd.getFirstAtomMapping().getMappingsByAtoms().entrySet()) {
 			IAtom eAtom = mapping.getKey();
-			toDel1.add(eAtom);
+			toDel1.add(smsd.getQuery().getAtomNumber(eAtom));
 			IAtom pAtom = mapping.getValue();
-			toDel2.add(pAtom);
+			toDel2.add(smsd.getTarget().getAtomNumber(pAtom));			
 		}
-		for (IAtom atom : toDel1) {
+		
+		
+		IAtom[] qAArr = new IAtom[Mol1.getAtomCount()];
+		for (int i = 0; i < qAArr.length; ++i) {
+			qAArr[i] = Mol1.getAtom(i);
+		}
+		
+		IAtom[] tAArr = new IAtom[Mol2.getAtomCount()];
+		for (int i = 0; i < tAArr.length; ++i) {
+			tAArr[i] = Mol2.getAtom(i);
+		}
+		
+		for (Integer i : toDel1) {
+			IAtom atom = qAArr[i];//Mol1.getAtom(i);
+			if (atom == null) continue;
+			//Mol1.removeAtom(i);
 			Mol1.removeAtomAndConnectedElectronContainers(atom);
+			
 		}
-
-
-		for (IAtom atom : toDel2) {
-			Mol2.removeAtomAndConnectedElectronContainers(atom);
+		for (Integer i : toDel2) {
+			IAtom atom = tAArr[i]; //Mol2.getAtom(i);
+			if (atom == null) continue;
+			//Mol2.removeAtom(atom);
+			Mol2.removeAtomAndConnectedElectronContainers(atom);			
 		}
-
 		
 		pair[0] = Mol1;
 		pair[1] = Mol2;
+	}
+	
+	public IAtomContainer[] pairDiff() {
 		return pair;
 	}
 	/**
@@ -196,11 +245,51 @@ public final class SMSDpair{
 		return trgConnAtom;
 	}
 	
+	/**
+	 * @return distance of qryConn and targetCon atoms refernced on qryConn atom
+	 */
+	public int distQT() {
+		if (!getQryConnAtom().isEmpty() && !getTrgConnAtom().isEmpty() &&
+				!atMapping.getMappingsByIndex().isEmpty()) {
+			int qry = getQryConnAtom().get(0);
+			int tar = getTrgConnAtom().get(0);
+			Integer ref = atMapping.getMappingsByIndex().get(tar);
+			if (ref == null) return 99;
+			ShortestPaths sp = new ShortestPaths(query, query.getAtom(qry));
+			return sp.distanceTo(query.getAtom(ref));
+		}
+		return 99;
+	}
+	public boolean isValid() throws CDKException, Exception {
+		if (!ConnectivityChecker.isConnected(pair[0]) || 
+				!ConnectivityChecker.isConnected(pair[1])) {
+			return false;
+		}
+
+		//System.out.println(distQT());
+		if (queryFrag().equals(targetFrag()) && distQT() < 4) {
+		//checking if qry and target fragments are identical and so no need to check if they are 
+		//attached to the same atom in the MCS **unless** their distance is >= 4
+		//correct is to check if they are on same ring rather than their distance **ToDO**
+			return true;
+		}
+		
+		Map<Integer, Integer> map = atMapping.getMappingsByIndex();
+		Set<Integer> tSet = new HashSet<>(this.getTrgConnAtom());
+		for (int i : this.getQryConnAtom()) {
+			Integer img = map.get(i);
+			//System.out.println(i + " " + img);
+			if (img == null) return false;
+			if (!tSet.contains(img)) return false;
+		}
+		return true;
+	}
+	
 	public static void main(String[] args) throws Exception {
 
 		SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
-		IAtomContainer mol1 = sp.parseSmiles("[H]O[C@](C([H])([H])[H])(C([H])([H])C([H])([H])[H])C([H])([H])C([H])([H])C([H])([H])[H]"); //(args[0]);
-		IAtomContainer mol2 = sp.parseSmiles("[H]O[C@](C([H])([H])[H])(C([H])([H])C([H])([H])C([H])([H])[H])C([H])([H])C([H])([H])[H]"); //(args[1]);
+		IAtomContainer mol1 = sp.parseSmiles("FCCOC1CCC([H])C(CCCCCCCC)C1"); //(args[0]);
+		IAtomContainer mol2 = sp.parseSmiles("CCCCCCCCC1C(OCCF)CCCC1"); //(args[1]);
 		StructureDiagramGenerator sdg = new StructureDiagramGenerator();
         sdg.setMolecule(mol1.clone());
 		sdg.generateCoordinates();
@@ -210,18 +299,28 @@ public final class SMSDpair{
         mol2 = sdg.getMolecule();
 		SMSDpair mcsp = new SMSDpair(mol1, mol2);
 		
+		System.out.println(mcsp.getSMSD().getAllAtomMapping());
+		IAtomContainer q1 = mcsp.getSMSD().getFirstAtomMapping().getMapCommonFragmentOnQuery();
+		IAtomContainer t1 = mcsp.getSMSD().getFirstAtomMapping().getMapCommonFragmentOnTarget();
+		IAtomContainer com = mcsp.getSMSD().getFirstAtomMapping().getCommonFragment();
+//		System.out.println(mcsp.getQryConnAtom());
+//		System.out.println(mcsp.getTrgConnAtom()
+		
 		JPanel panel = new JPanel();
 		panel.setPreferredSize(new Dimension(1500, 600));
 		StructureDisplay tdp1 = new StructureDisplay(mcsp.rxnmol());//(mcsp.query);
 		panel.add(tdp1);
-		StructureDisplay tdp2 = new StructureDisplay(mcsp.target);
+		StructureDisplay tdp2 = new StructureDisplay(mcsp.prdmol());
 		panel.add(tdp2);
-		StructureDisplay tdp3 = new StructureDisplay(mcsp.getSMSD().getQuery());// pairDiff()[0]);
-		//tdp1.highlightSelect(mcsp.queryHi()); //keyset for query molecule
+		StructureDisplay tdp3 = new StructureDisplay(mcsp.pairDiff()[0]);
+		tdp1.highlightSelect(mcsp.queryHi()); //keyset for query molecule
 		panel.add(tdp3);
-		StructureDisplay tdp4 = new StructureDisplay(mcsp.getSMSD().getTarget()); //pairDiff()[1]);
+		StructureDisplay tdp4 = new StructureDisplay(mcsp.pairDiff()[1]);
 		tdp2.highlightSelect(mcsp.targetHi()); //values for target molecule
 		panel.add(tdp4);
+		//System.out.println(mcsp.pairDiff()[0]);
+		//System.out.println(mcsp.pairDiff()[1]);
+		System.out.println(mcsp.isValid());
 		
 
 

@@ -123,8 +123,9 @@ public class AdjMatrix {
 				IAtomContainer[] pair = mcsp.pairDiff();
 				if (pair == null) continue;
 
-				if (ConnectivityChecker.isConnected(pair[0]) && 
-						ConnectivityChecker.isConnected(pair[1])) {
+				//if (ConnectivityChecker.isConnected(pair[0]) && 
+				//		ConnectivityChecker.isConnected(pair[1]) &&
+				if (mcsp.isValid()) {
 					connMatrix.set(i, j, -diff);
 					MCSMatrix.set(i, j, mcsp);
 					connMatrix.set(j, i, +diff);

@@ -2,6 +2,7 @@ package viewer;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
@@ -59,16 +60,19 @@ public class StructureDisplay extends JPanel{
 		isEmpty = false;
 		drawMol();
 	}
-	public void drawMol() throws Exception {
+	private void drawMol() throws Exception {
 		drawArea = new Rectangle(W-20, H-20);
-		Font font = new Font("Verdana", Font.PLAIN, 26);
+		this.setPreferredSize(new Dimension(W,H));
+		drawArea = new Rectangle(W-20, H-20);
+		Font font = new Font("Verdana", Font.PLAIN, 18);
+		//Font font = new Font("Verdana", Font.PLAIN, 26);
 		List<IGenerator<IAtomContainer>> generators = new ArrayList<IGenerator<IAtomContainer>>();
         generators.add(new BasicSceneGenerator());
         generators.add(new StandardGenerator(font));
         generators.add(new HighlightGenerator());
-//        for (IAtom atom : mol.atoms(j)) {	// this is for labelling atoms
+//        for (IAtom atom : mol.atoms()) {	// this is for labelling atoms  //uncomment for atom numbering
 //            atom.setProperty(StandardGenerator.ANNOTATION_LABEL,
-//                             Integer.toString(1 + mol.getAtomNumber(atom)));
+//                             Integer.toString(0 + mol.getAtomNumber(atom)));
 //        }
                
         renderer = new AtomContainerRenderer(generators, 
