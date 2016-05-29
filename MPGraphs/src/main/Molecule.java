@@ -4,6 +4,7 @@
 package main;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -35,6 +36,7 @@ public class Molecule implements Serializable, Comparable<Molecule> {
         sdg.setMolecule(ac.clone());
 		sdg.generateCoordinates();
         this.ac = sdg.getMolecule();
+        this.ac.setStereoElements(new ArrayList(0));
 		this.potency = potency;
 		atomMapping = new HashMap<Integer, Set<Integer>>();
 	}

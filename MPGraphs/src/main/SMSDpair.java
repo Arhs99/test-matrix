@@ -34,16 +34,20 @@ import viewer.StructureDisplay;
 
 
 
-public final class SMSDpair{
+public final class SMSDpair implements java.io.Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private IAtomContainer query = new AtomContainer();
 	private IAtomContainer target = new AtomContainer();
-	private final Isomorphism smsd;
+	transient private final Isomorphism smsd;
 	private Collection<Integer> queryHL;
 	private Collection<Integer> targetHL;
 	private AtomAtomMapping atMapping;
 	private ArrayList<Integer> qryConnAtom;
 	private ArrayList<Integer> trgConnAtom;
-	private SmilesGenerator sg = SmilesGenerator.unique(); //absolute().aromatic(); 
+	transient private SmilesGenerator sg = SmilesGenerator.unique(); //absolute().aromatic(); 
 	private IAtomContainer[] pair;
 	
 	public SMSDpair(IAtomContainer mol1, IAtomContainer mol2) throws Exception {
@@ -52,7 +56,10 @@ public final class SMSDpair{
 		ExtAtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol2);
 
 		mol1 = ExtAtomContainerManipulator.removeHydrogens(mol1);
+		mol1.setStereoElements(new ArrayList(0));
+		//		See http://efficientbits.blogspot.co.uk/2015/10/java-serialization-great-power-but-at.html		
 		mol2 = ExtAtomContainerManipulator.removeHydrogens(mol2);
+		mol2.setStereoElements(new ArrayList(0));
 
 		smsd = new Isomorphism(mol1, mol2, Algorithm.DEFAULT, true, true, true);
 		smsd.setChemFilters(true, true, true);
@@ -227,9 +234,9 @@ public final class SMSDpair{
 		return targetHL;
 	}
 	
-	public Isomorphism getSMSD() {
-		return smsd;
-	}
+//	public Isomorphism getSMSD() {
+//		return smsd;
+//	}
 	
 	/**
 	 * @return array of indices of connection atoms in query AtomContainer
@@ -299,10 +306,10 @@ public final class SMSDpair{
         mol2 = sdg.getMolecule();
 		SMSDpair mcsp = new SMSDpair(mol1, mol2);
 		
-		System.out.println(mcsp.getSMSD().getAllAtomMapping());
-		IAtomContainer q1 = mcsp.getSMSD().getFirstAtomMapping().getMapCommonFragmentOnQuery();
-		IAtomContainer t1 = mcsp.getSMSD().getFirstAtomMapping().getMapCommonFragmentOnTarget();
-		IAtomContainer com = mcsp.getSMSD().getFirstAtomMapping().getCommonFragment();
+//		System.out.println(mcsp.getSMSD().getAllAtomMapping());
+//		IAtomContainer q1 = mcsp.getSMSD().getFirstAtomMapping().getMapCommonFragmentOnQuery();
+//		IAtomContainer t1 = mcsp.getSMSD().getFirstAtomMapping().getMapCommonFragmentOnTarget();
+//		IAtomContainer com = mcsp.getSMSD().getFirstAtomMapping().getCommonFragment();
 //		System.out.println(mcsp.getQryConnAtom());
 //		System.out.println(mcsp.getTrgConnAtom()
 		
