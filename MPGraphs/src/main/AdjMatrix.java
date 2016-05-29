@@ -1,61 +1,39 @@
 package main;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Point;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 
 import org.openscience.cdk.fingerprint.Fingerprinter;
 import org.openscience.cdk.fingerprint.IBitFingerprint;
 import org.openscience.cdk.fingerprint.IFingerprinter;
-import org.openscience.cdk.graph.ConnectivityChecker;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.similarity.Tanimoto;
 import org.openscience.smsd.tools.ExtAtomContainerManipulator;
 
-import viewer.HeatMap;
-import viewer.PairsTree;
-import viewer.SideDisplay;
-
 import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.impl.DenseObjectMatrix2D;
-import javax.swing.JMenuBar;
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.event.MouseInputAdapter;
-
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeEvent;
 
 
-public class AdjMatrix {
+public class AdjMatrix implements java.io.Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private DoubleMatrix2D connMatrix;
 	private Molecule[] molArray;
 	private DenseObjectMatrix2D MCSMatrix;
 	private static final double TANI_THRES = 0.60;
 	private CComp cc;
 	private JProgressBar progressBar;
+	private int fieldInd;
+	private int idInd;
+	private double norm;
 
 	public AdjMatrix(Set<Molecule> map) {		
 		molArray = map.toArray(new Molecule[map.size()]);
@@ -70,7 +48,10 @@ public class AdjMatrix {
 		}
 	}
 	
-	public AdjMatrix(Set<Molecule> map, JProgressBar progressBar) {
+	public AdjMatrix(Set<Molecule> map, JProgressBar progressBar, int fieldInd, int idInd, double norm) {
+		this.fieldInd = fieldInd;
+		this.idInd = idInd;
+		this.norm = norm;
 		molArray = map.toArray(new Molecule[map.size()]);
 		connMatrix = new DenseDoubleMatrix2D(molArray.length, molArray.length);
 		MCSMatrix = new DenseObjectMatrix2D(molArray.length, molArray.length);
@@ -267,6 +248,18 @@ public class AdjMatrix {
 		
 	}
 	
+
+	public int getFieldInd() {
+		return fieldInd;
+	}
+
+	public int getIdInd() {
+		return idInd;
+	}
+
+	public double getNorm() {
+		return norm;
+	}
 
 	/**
 	 * @param args
