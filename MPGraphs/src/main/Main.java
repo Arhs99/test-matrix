@@ -121,7 +121,7 @@ public class Main extends JPanel {
 				}				
 				set.add(molec);
 				++cnt;
-				if (cnt == 25) break;
+				if (cnt == 120) break;
 			}
 			return new AdjMatrix(set, progressBar, fieldInd, idInd, norm);
 		}

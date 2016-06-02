@@ -176,7 +176,6 @@ public class PairsTree extends JPanel {
 			public Integer create() {
 				return i++;
 			}};
-		//this.adm = adm;
 		this.norm = norm;
 		this.molIndex = molIndex;
 		graph = new DelegateTree<Integer, Integer>();
@@ -185,8 +184,6 @@ public class PairsTree extends JPanel {
 		vertexMap = new HashMap<>();
 		graphMouse = new PTGraphMouse<>(); //DefaultModalGraphMouse<>();
 		controls = new JPanel();
-//		sidePanel = new JPanel();
-//		sidePanel.setLayout(new BoxLayout(sidePanel, BoxLayout.Y_AXIS));
 		tdp1 = new StructureDisplay();
 		molToolTip = new ImageToolTip(tdp1);
 		createTree();

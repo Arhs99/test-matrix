@@ -48,6 +48,11 @@ public final class SMSDpair implements java.io.Serializable {
 	transient private SmilesGenerator sg = SmilesGenerator.unique(); //absolute().aromatic(); 
 	private IAtomContainer[] pair;
 	
+	/**
+	 * @param mol1
+	 * @param mol2
+	 * @throws Exception
+	 */
 	public SMSDpair(IAtomContainer mol1, IAtomContainer mol2) throws Exception {
 	
 		ExtAtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol1);
@@ -66,47 +71,60 @@ public final class SMSDpair implements java.io.Serializable {
 		if (smsd != null) {
 			this.query = smsd.getQuery();
 			this.target = smsd.getTarget();
-		
-		this.pair = new IAtomContainer[2];
-		
-		setPairDiff();
-		
-		atMapping = smsd.getFirstAtomMapping();
-		//atMapping = smsd.getAllAtomMapping().get(0);
-		
-		queryHL = new HashSet<>();
-		for (int i = 0; i < query.getAtomCount(); ++i) {
-			if (! atMapping.getMappingsByIndex().keySet().contains(i)) {
-				queryHL.add(i);
-			}
-		}
-		targetHL = new HashSet<>();
-		for (int i = 0; i < target.getAtomCount(); ++i) {
-			if (!atMapping.getMappingsByIndex().values().contains(i)) {
-				targetHL.add(i);
-			}
-		}
-		
-		qryConnAtom = new ArrayList<>();
-		for (int i : atMapping.getMappingsByIndex().keySet()) {
-			for (int j : queryHi()) {
-				if (query.getBond(query.getAtom(i), query.getAtom(j)) != null) {
-					qryConnAtom.add(i);
+
+			this.pair = new IAtomContainer[2];
+
+			setPairDiff();
+
+			atMapping = smsd.getFirstAtomMapping();
+			//atMapping = smsd.getAllAtomMapping().get(0);
+
+			queryHL = new HashSet<>();
+			for (int i = 0; i < query.getAtomCount(); ++i) {
+				if (! atMapping.getMappingsByIndex().keySet().contains(i)) {
+					queryHL.add(i);
 				}
 			}
-		}
-		
-		trgConnAtom = new ArrayList<>();
-		for (int i : atMapping.getMappingsByIndex().values()) {
-			for (int j : targetHi()) {
-				if (target.getBond(target.getAtom(i), target.getAtom(j)) != null) {
-					trgConnAtom.add(i);
+			targetHL = new HashSet<>();
+			for (int i = 0; i < target.getAtomCount(); ++i) {
+				if (!atMapping.getMappingsByIndex().values().contains(i)) {
+					targetHL.add(i);
 				}
 			}
-		}
-		
-		}
-				
+
+			qryConnAtom = new ArrayList<>();
+			for (int i : atMapping.getMappingsByIndex().keySet()) {
+				for (int j : queryHi()) {
+					if (query.getBond(query.getAtom(i), query.getAtom(j)) != null) {
+						qryConnAtom.add(i);
+					}
+				}
+			}
+
+			trgConnAtom = new ArrayList<>();
+			for (int i : atMapping.getMappingsByIndex().values()) {
+				for (int j : targetHi()) {
+					if (target.getBond(target.getAtom(i), target.getAtom(j)) != null) {
+						trgConnAtom.add(i);
+					}
+				}
+			}
+
+			/*		Handle the case when one of (qry, target) mcs pair has no substituent */
+			if (queryHi().isEmpty() && !targetHi().isEmpty()) {
+				for (int i: atMapping.getMappingsByIndex().keySet()) {
+					if (trgConnAtom.contains(atMapping.getMappingsByIndex().get(i))) {
+						qryConnAtom.add(i);
+					}
+				}
+			}
+
+			if (!queryHi().isEmpty() && targetHi().isEmpty()) {
+				for (int i: qryConnAtom) {
+						trgConnAtom.add(atMapping.getMappingsByIndex().get(i));
+				}
+			}
+		}		
 	}
 	
 	public IAtomContainer rxnmol() {
@@ -208,9 +226,9 @@ public final class SMSDpair implements java.io.Serializable {
 		return targetHL;
 	}
 	
-//	public Isomorphism getSMSD() {
-//		return smsd;
-//	}
+	public Isomorphism getSMSD() {
+		return smsd;
+	}
 	
 	/**
 	 * @return array of indices of connection atoms in query AtomContainer
@@ -269,8 +287,8 @@ public final class SMSDpair implements java.io.Serializable {
 	public static void main(String[] args) throws Exception {
 
 		SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
-		IAtomContainer mol1 = sp.parseSmiles("FCCOC1CCC([H])C(CCCCCCCC)C1"); //(args[0]);
-		IAtomContainer mol2 = sp.parseSmiles("CCCCCCCCC1C(OCCF)CCCC1"); //(args[1]);
+		IAtomContainer mol2 = sp.parseSmiles("C1CCC([H])C(CCCCCCCC)C1"); //(args[0]);
+		IAtomContainer mol1 = sp.parseSmiles("CCCCCCCCC1C(OCCF)CCCC1"); //(args[1]);
 		StructureDiagramGenerator sdg = new StructureDiagramGenerator();
         sdg.setMolecule(mol1.clone());
 		sdg.generateCoordinates();
@@ -280,21 +298,11 @@ public final class SMSDpair implements java.io.Serializable {
         mol2 = sdg.getMolecule();
 		SMSDpair mcsp = new SMSDpair(mol1, mol2);
 		
-		try
-	      {
-	         FileOutputStream fileOut =
-	         new FileOutputStream("employee.ser");
-	         ObjectOutputStream out = new ObjectOutputStream(fileOut);
-	         out.writeObject(mcsp);
-	         out.close();
-	         fileOut.close();
-	         System.out.printf("Serialized data is saved in /tmp/employee.ser");
-	      }catch(IOException i)
-	      {
-	          i.printStackTrace();
-	      }
+
 		
-//		System.out.println(mcsp.getSMSD().getAllAtomMapping());
+		System.out.println(mcsp.getQryConnAtom());
+		System.out.println(mcsp.getTrgConnAtom());
+//		https://docs.oracle.com/javase/tutorial/uiswing/components/combobox.html
 //		IAtomContainer q1 = mcsp.getSMSD().getFirstAtomMapping().getMapCommonFragmentOnQuery();
 //		IAtomContainer t1 = mcsp.getSMSD().getFirstAtomMapping().getMapCommonFragmentOnTarget();
 //		IAtomContainer com = mcsp.getSMSD().getFirstAtomMapping().getCommonFragment();

@@ -109,6 +109,7 @@ public class SubGrid extends JPanel {
 		this.validate();
 	}
 	
+	@SuppressWarnings("unchecked")
 	public void setIndex(int molIndex, int atomIndex) throws Exception {
 		this.molIndex = molIndex;
 		rootMol = adm.getMolArray()[molIndex];	
@@ -136,6 +137,7 @@ public class SubGrid extends JPanel {
 			}
 		});
 		molIDs.setModel(new DefaultComboBoxModel(comboIDs));
+		molIDs.setEditable(true);
 		rootPanel.add(molIDs, BorderLayout.SOUTH);
 		setAtomIndex(atomIndex);
 	}

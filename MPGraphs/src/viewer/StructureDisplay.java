@@ -70,10 +70,10 @@ public class StructureDisplay extends JPanel{
         generators.add(new BasicSceneGenerator());
         generators.add(new StandardGenerator(font));
         generators.add(new HighlightGenerator());
-//        for (IAtom atom : mol.atoms()) {	// this is for labelling atoms  //uncomment for atom numbering
-//            atom.setProperty(StandardGenerator.ANNOTATION_LABEL,
-//                             Integer.toString(0 + mol.getAtomNumber(atom)));
-//        }
+        for (IAtom atom : mol.atoms()) {	// this is for labelling atoms  //uncomment for atom numbering
+            atom.setProperty(StandardGenerator.ANNOTATION_LABEL,
+                             Integer.toString(0 + mol.getAtomNumber(atom)));
+        }
                
         renderer = new AtomContainerRenderer(generators, 
         		new AWTFontManager());
