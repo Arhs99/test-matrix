@@ -136,6 +136,7 @@ public class SubGrid extends JPanel {
 			}
 		});
 		molIDs.setModel(new DefaultComboBoxModel(comboIDs));
+		molIDs.setEditable(true);
 		rootPanel.add(molIDs, BorderLayout.SOUTH);
 		setAtomIndex(atomIndex);
 	}

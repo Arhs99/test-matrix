@@ -42,17 +42,6 @@ import javax.swing.event.MouseInputAdapter;
 import org.openscience.cdk.graph.ConnectivityChecker;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.smsd.tools.ExtAtomContainerManipulator;
-//import org.openscience.cdk.smsd.tools.MoleculeSanityCheck;
-
-
-
-
-
-
-
-
-
-
 import viewer.GraphView;
 import viewer.HeatMap;
 import viewer.PairsGraph;
@@ -62,6 +51,10 @@ import viewer.SideDisplay;
 import viewer.SubGrid;
 
 public class Main extends JPanel {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private AdjMatrix adm;
 	private SideDisplay disp;
 	private HeatMap heat = null;
@@ -121,7 +114,7 @@ public class Main extends JPanel {
 				}				
 				set.add(molec);
 				++cnt;
-				if (cnt == 25) break;
+				//if (cnt == 120) break;
 			}
 			return new AdjMatrix(set, progressBar, fieldInd, idInd, norm);
 		}

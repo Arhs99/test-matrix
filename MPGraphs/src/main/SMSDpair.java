@@ -49,9 +49,9 @@ public final class SMSDpair implements java.io.Serializable {
 	private ArrayList<Integer> trgConnAtom;
 	transient private SmilesGenerator sg = SmilesGenerator.unique(); //absolute().aromatic(); 
 	private IAtomContainer[] pair;
-	
+
 	public SMSDpair(IAtomContainer mol1, IAtomContainer mol2) throws Exception {
-	
+
 		ExtAtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol1);
 		ExtAtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol2);
 
@@ -63,51 +63,65 @@ public final class SMSDpair implements java.io.Serializable {
 
 		smsd = new Isomorphism(mol1, mol2, Algorithm.DEFAULT, true, true, true);
 		smsd.setChemFilters(true, true, true);
-		
+
 		if (smsd != null) {
 			this.query = smsd.getQuery();
 			this.target = smsd.getTarget();
-		
-		this.pair = new IAtomContainer[2];
-		
-		setPairDiff();
-		
-		atMapping = smsd.getFirstAtomMapping();
-		//atMapping = smsd.getAllAtomMapping().get(0);
-		
-		queryHL = new HashSet<>();
-		for (int i = 0; i < query.getAtomCount(); ++i) {
-			if (! atMapping.getMappingsByIndex().keySet().contains(i)) {
-				queryHL.add(i);
-			}
-		}
-		targetHL = new HashSet<>();
-		for (int i = 0; i < target.getAtomCount(); ++i) {
-			if (!atMapping.getMappingsByIndex().values().contains(i)) {
-				targetHL.add(i);
-			}
-		}
-		
-		qryConnAtom = new ArrayList<>();
-		for (int i : atMapping.getMappingsByIndex().keySet()) {
-			for (int j : queryHi()) {
-				if (query.getBond(query.getAtom(i), query.getAtom(j)) != null) {
-					qryConnAtom.add(i);
+
+			this.pair = new IAtomContainer[2];
+
+			setPairDiff();
+
+			atMapping = smsd.getFirstAtomMapping();
+			//atMapping = smsd.getAllAtomMapping().get(0);
+
+			queryHL = new HashSet<>();
+			for (int i = 0; i < query.getAtomCount(); ++i) {
+				if (! atMapping.getMappingsByIndex().keySet().contains(i)) {
+					queryHL.add(i);
 				}
 			}
-		}
-		
-		trgConnAtom = new ArrayList<>();
-		for (int i : atMapping.getMappingsByIndex().values()) {
-			for (int j : targetHi()) {
-				if (target.getBond(target.getAtom(i), target.getAtom(j)) != null) {
-					trgConnAtom.add(i);
+			targetHL = new HashSet<>();
+			for (int i = 0; i < target.getAtomCount(); ++i) {
+				if (!atMapping.getMappingsByIndex().values().contains(i)) {
+					targetHL.add(i);
 				}
 			}
-		}
-		
-		}
-				
+
+			qryConnAtom = new ArrayList<>();
+			for (int i : atMapping.getMappingsByIndex().keySet()) {
+				for (int j : queryHi()) {
+					if (query.getBond(query.getAtom(i), query.getAtom(j)) != null) {
+						qryConnAtom.add(i);
+					}
+				}
+			}
+
+			trgConnAtom = new ArrayList<>();
+			for (int i : atMapping.getMappingsByIndex().values()) {
+				for (int j : targetHi()) {
+					if (target.getBond(target.getAtom(i), target.getAtom(j)) != null) {
+						trgConnAtom.add(i);
+					}
+				}
+			}
+
+			/*		Handle the case when one of (qry, target) mcs pair has no substituent */
+			if (queryHi().isEmpty() && !targetHi().isEmpty()) {
+				for (int i: atMapping.getMappingsByIndex().keySet()) {
+					if (trgConnAtom.contains(atMapping.getMappingsByIndex().get(i))) {
+						qryConnAtom.add(i);
+					}
+				}
+			}
+
+			if (!queryHi().isEmpty() && targetHi().isEmpty()) {
+				for (int i: qryConnAtom) {
+					trgConnAtom.add(atMapping.getMappingsByIndex().get(i));
+				}
+			}
+		}		
+
 	}
 	
 	public IAtomContainer rxnmol() {
@@ -293,7 +307,7 @@ public final class SMSDpair implements java.io.Serializable {
 	}
 	
 	public static void main(String[] args) throws Exception {
-
+		System.out.println("ha");
 		SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
 		IAtomContainer mol1 = sp.parseSmiles("FCCOC1CCC([H])C(CCCCCCCC)C1"); //(args[0]);
 		IAtomContainer mol2 = sp.parseSmiles("CCCCCCCCC1C(OCCF)CCCC1"); //(args[1]);
@@ -310,8 +324,8 @@ public final class SMSDpair implements java.io.Serializable {
 //		IAtomContainer q1 = mcsp.getSMSD().getFirstAtomMapping().getMapCommonFragmentOnQuery();
 //		IAtomContainer t1 = mcsp.getSMSD().getFirstAtomMapping().getMapCommonFragmentOnTarget();
 //		IAtomContainer com = mcsp.getSMSD().getFirstAtomMapping().getCommonFragment();
-//		System.out.println(mcsp.getQryConnAtom());
-//		System.out.println(mcsp.getTrgConnAtom()
+		System.out.println(mcsp.getQryConnAtom());
+		System.out.println(mcsp.getTrgConnAtom());
 		
 		JPanel panel = new JPanel();
 		panel.setPreferredSize(new Dimension(1500, 600));
