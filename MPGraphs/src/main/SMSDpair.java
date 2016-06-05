@@ -138,7 +138,7 @@ public final class SMSDpair implements java.io.Serializable {
 	 * @return SMILES absolute representation of query fragment
 	 * @throws CloneNotSupportedException 
 	 * @throws CDKException
-	 * @throws Exception
+	 * @throws Exception  
 	 */
 	public String queryFrag() throws CloneNotSupportedException {
 		try {
