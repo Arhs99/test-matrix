@@ -111,7 +111,6 @@ public class AdjMatrix implements java.io.Serializable {
 					MCSMatrix.set(i, j, mcsp);
 					connMatrix.set(j, i, +diff);
 					MCSMatrix.set(j, i, mcsp);
-					
 					mol1.setIndex(i);
 					mol2.setIndex(j);
 					for (int key : mcsp.getQryConnAtom()) {

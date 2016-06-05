@@ -104,9 +104,7 @@ public class Main extends JPanel {
 					}
 				
 				String val = sdf.sdfMap().get(mol)[fieldInd];
-				if (val == null || mol.getAtomCount() == 0) {
-					continue;
-				}
+				if (val == null || mol.getAtomCount() == 0) continue;
 				
 				ExtAtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(cleanedMol);
 				cleanedMol = ExtAtomContainerManipulator.removeHydrogens(cleanedMol);
@@ -118,10 +116,12 @@ public class Main extends JPanel {
 				} else {
 					String id = sdf.sdfMap().get(mol)[idInd - 1];
 					molec.setMolID(id);
-				}				
+				}
+				molec.setFieldStr(sdf.fieldStr());
+				molec.setValues(sdf.sdfMap().get(mol));
 				set.add(molec);
 				++cnt;
-				if (cnt == 120) break;
+				if (cnt == 60) break;
 			}
 			return new AdjMatrix(set, progressBar, fieldInd, idInd, norm);
 		}
@@ -504,7 +504,7 @@ public class Main extends JPanel {
 	
 	public Main() throws Exception {
 		super(new BorderLayout());
-		this.setPreferredSize(new Dimension(1000, 1000));
+		this.setPreferredSize(new Dimension(1800, 1000));
 		initMenu();
 		}
 	
@@ -512,7 +512,7 @@ public class Main extends JPanel {
 		final JFrame f = new JFrame("Heatmap");
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		f.getContentPane().setLayout(new BorderLayout());
-		f.getContentPane().setPreferredSize(new Dimension(1300, 1000));
+		f.getContentPane().setPreferredSize(new Dimension(1800, 1000));
 		Main main = new Main();
 		
 		f.setJMenuBar(main.MenuBar());

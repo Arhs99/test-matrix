@@ -116,7 +116,7 @@ public class SubGrid extends JPanel {
 		rootPanel.removeAll();
 		String fieldStr = rootMol.getFieldName().length() > 10?  // show only 10 first chars of field name
 				rootMol.getFieldName().substring(0, 10) : rootMol.getFieldName(); 
-		rootIcon = new SelectionIcon(ICON_WIDTH + 40, ICON_HEIGHT + 40, rootMol.getMol(),
+		rootIcon = new SelectionIcon(ICON_WIDTH + 40, ICON_HEIGHT + 40, rootMol,
 				rootMol.getPotency(), fieldStr, rootMol.getMolID(), rootMol.getAtomMapping().keySet());
 		JLabel rootLabel = new JLabel(rootIcon);
 		rootPanel.add(rootLabel);
@@ -187,7 +187,7 @@ public class SubGrid extends JPanel {
 					}
 				}
 		for (Molecule mol : green) {
-			StructureDisplay sd = new StructureDisplay(mol.getMol());
+			StructureDisplay sd = new StructureDisplay(mol, -1);
 			double dP = (DeltaP.logDiff(rootMol.getPotency(), mol.getPotency(), norm) == Double.MIN_VALUE ?
 					0 : DeltaP.logDiff(mol.getPotency(), rootMol.getPotency(), norm));
 			Color col;
@@ -247,7 +247,7 @@ public class SubGrid extends JPanel {
 		//greenPanel.add(scrollbar);
 		
 		for (Molecule mol : red) {
-			StructureDisplay sd = new StructureDisplay(mol.getMol());
+			StructureDisplay sd = new StructureDisplay(mol, -1);
 			double dP = (DeltaP.logDiff(rootMol.getPotency(), mol.getPotency(), norm) == Double.MIN_VALUE ?
 					0 : DeltaP.logDiff(mol.getPotency(), rootMol.getPotency(), norm));
 			Color col;

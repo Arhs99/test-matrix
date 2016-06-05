@@ -91,9 +91,9 @@ public class PairsTree extends JPanel {
 		// with labels
 		FRLayout<Integer,Integer> flayout = new FRLayout<Integer, Integer>(graph);
         flayout.setMaxIterations(100);
-        flayout.setInitializer(new RandomLocationTransformer<Integer>(new Dimension(1200, 800), 0));
+        flayout.setInitializer(new RandomLocationTransformer<Integer>(new Dimension(1800, 900), 0));
         flayout.setSize(new Dimension(1200, 800));
-        vv1 = new VisualizationViewer<>(flayout, new Dimension(1200, 900));
+        vv1 = new VisualizationViewer<>(flayout, new Dimension(1800, 900));
         vv1.setBackground(Color.white);
         vv1.getRenderContext().setEdgeShapeTransformer(new EdgeShape.QuadCurve<Integer, Integer>());
         vv1.getRenderContext().setEdgeDrawPaintTransformer(new EdgeColor());
@@ -113,9 +113,9 @@ public class PairsTree extends JPanel {
         vv1.getRenderContext().setVertexIconTransformer(vertexIconTransformer);
         
         // vertices layout
-        RadialTreeLayout<Integer,Integer> radialLayout = new RadialTreeLayout<>(graph, 250, 250);//, 900, 900);
-		radialLayout.setSize(new Dimension(1200, 900));
-		vv2 = new VisualizationViewer<Integer,Integer>(radialLayout, new Dimension(1200, 900)) {
+        RadialTreeLayout<Integer,Integer> radialLayout = new RadialTreeLayout<>(graph, 100, 100);//, 900, 900);
+		radialLayout.setSize(new Dimension(1800, 800));
+		vv2 = new VisualizationViewer<Integer,Integer>(radialLayout, new Dimension(1800, 800)) {
 			public JToolTip createToolTip() {
 				if (onVertex) {
 					onVertex = false;
@@ -153,7 +153,7 @@ public class PairsTree extends JPanel {
 				//sidePanel.removeAll();
 				try {
 					tdp1.setMol(mol.getMol());
-					StructureDisplay sd = new StructureDisplay(mol.getMol());					
+					StructureDisplay sd = new StructureDisplay(mol, -1);					
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -186,7 +186,7 @@ public class PairsTree extends JPanel {
 		controls = new JPanel();
 		tdp1 = new StructureDisplay();
 		molToolTip = new ImageToolTip(tdp1);
-		createTree();
+		createTree(-1);
 		initVV();
 		ToolTipManager.sharedInstance().setReshowDelay(0);
 		ToolTipManager.sharedInstance().setInitialDelay(0);
@@ -209,15 +209,54 @@ public class PairsTree extends JPanel {
 				setGraphLayout();
 			}
 		});
+        
+        String[] fields = vertexMap.get(0).getFieldStr();
+        final JComboBox fieldBox = new JComboBox(fields);
+        fieldBox.addActionListener(new ActionListener() {			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				@SuppressWarnings("rawtypes")
+				JComboBox fb = (JComboBox)e.getSource();
+				int ind = fb.getSelectedIndex();
+				try {
+					resetField(ind);
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				System.out.println(vertexMap.get(0).getFieldStr()[ind]);
+			}
+		});
                 
         controls.add(modeBox);
         controls.add(jcb);
+        controls.add(fieldBox);
         setLayout(new BorderLayout(0, 0));
         this.add(vv);
         this.add(controls, BorderLayout.SOUTH);
 	}
 	
 	private void setGraphLayout() {
+		this.removeAll();
+		vv = hasLabels? vv1 : vv2;
+		this.add(vv);
+        this.add(controls, BorderLayout.SOUTH);
+		this.validate();
+		this.repaint();
+	}
+	
+	private void resetField(int extra) throws Exception {
+		edgeFactory = new Factory<Integer>() {
+			int i=0;
+			public Integer create() {
+				return i++;
+			}};
+		this.graph = new DelegateTree<Integer, Integer>();
+		this.iconMap = new HashMap<>();
+		this.edgeMap = new HashMap<>();
+		createTree(extra);
+		initVV();
+		
 		this.removeAll();
 		vv = hasLabels? vv1 : vv2;
 		this.add(vv);
@@ -236,7 +275,7 @@ public class PairsTree extends JPanel {
 		this.graph = new DelegateTree<Integer, Integer>();
 		this.iconMap = new HashMap<>();
 		this.edgeMap = new HashMap<>();
-		createTree();
+		createTree(-1);
 		initVV();
 		
 		this.removeAll();
@@ -286,10 +325,10 @@ public class PairsTree extends JPanel {
 		}
 	}
 	
-	private void createTree() throws Exception {
+	private void createTree(int extra) throws Exception {
 		Molecule rootMol = heat.getMolArray()[molIndex];
 		potencies = new ArrayList<>(); 
-		StructureDisplay sd = new StructureDisplay(rootMol.getMol());
+		StructureDisplay sd = new StructureDisplay(rootMol, extra);
 		fieldStr = rootMol.getFieldName();
 		if (fieldStr.length() > 10)
 			fieldStr = rootMol.getFieldName().substring(0, 10); // show only 10 first chars of field name
@@ -304,7 +343,7 @@ public class PairsTree extends JPanel {
 			if (heat.getMCSArr()[i][molIndex] != null) {
 				SMSDpair pair = (SMSDpair) heat.getMCSArr()[i][molIndex];
 				Molecule mol = heat.getMolArray()[i];
-				sd = new StructureDisplay(mol.getMol());
+				sd = new StructureDisplay(mol, extra);
 				double dP = heat.getData()[i][molIndex];
 				Color col;
 				if (dP > 1) {
@@ -346,7 +385,7 @@ public class PairsTree extends JPanel {
 				molec.setMolID(Integer.toString(cnt + 100000));
 				map.add(molec);
 				++cnt;
-				if (cnt == 19) break;
+				if (cnt == 10) break;
 			}
 			AdjMatrix adm = new AdjMatrix(map);
 			SideDisplay disp = new SideDisplay();

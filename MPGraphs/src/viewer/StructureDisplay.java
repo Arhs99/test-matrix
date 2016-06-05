@@ -19,6 +19,8 @@ import javax.swing.JPanel;
 import javax.swing.JToolTip;
 import javax.swing.SwingUtilities;
 
+import main.Molecule;
+
 import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
@@ -44,19 +46,25 @@ public class StructureDisplay extends JPanel{
 	private static final int H = 300;
 	private boolean isEmpty;
 	private IAtomContainer mol;
+	private Molecule molec;
 	private Rectangle drawArea;
 	private AtomContainerRenderer renderer;
-	private boolean isNewMol = true;
+	private int extra = -1;
+//	private String extraName;
+//	private double extraVal;
 	public StructureDisplay() throws Exception {
 		IAtomContainer mol1 = new AtomContainer();
 		this.mol = mol1;
 		isEmpty = true;
 		drawMol();
 	}
-	public StructureDisplay(IAtomContainer mol) throws Exception {
+	public StructureDisplay(Molecule molec, int ind) throws Exception {
+		IAtomContainer mol = molec.getMol();
 		if (mol == null)
 			throw new NullPointerException("No mol");
 		this.mol = mol.clone();
+		this.molec = molec;
+		this.setExtraFieldInd(ind);
 		isEmpty = false;
 		drawMol();
 	}
@@ -70,10 +78,10 @@ public class StructureDisplay extends JPanel{
         generators.add(new BasicSceneGenerator());
         generators.add(new StandardGenerator(font));
         generators.add(new HighlightGenerator());
-        for (IAtom atom : mol.atoms()) {	// this is for labelling atoms  //uncomment for atom numbering
-            atom.setProperty(StandardGenerator.ANNOTATION_LABEL,
-                             Integer.toString(0 + mol.getAtomNumber(atom)));
-        }
+//        for (IAtom atom : mol.atoms()) {	// this is for labelling atoms  //uncomment for atom numbering
+//            atom.setProperty(StandardGenerator.ANNOTATION_LABEL,
+//                             Integer.toString(0 + mol.getAtomNumber(atom)));
+//        }
                
         renderer = new AtomContainerRenderer(generators, 
         		new AWTFontManager());
@@ -177,20 +185,33 @@ public class StructureDisplay extends JPanel{
 			@Override
 			public void paintIcon(Component c, Graphics g, int x, int y) {
 				g.setColor(Color.white);
-				g.fillRoundRect(x, y, width, height, 30, 30);
+				g.fillRoundRect(x, y, width, height, 10, 10);
 				g.setColor(col);//(Color.black);
-				g.drawRoundRect(x, y, width, height, 30, 30);
+				g.drawRoundRect(x, y, width, height, 10, 10);
 				FontMetrics metrics = c.getFontMetrics(g.getFont());
-				String text = fieldStr + " : " + pot;
+				String text = fieldStr.substring(0, 10) + " : " + pot;
 				int textW = SwingUtilities.computeStringWidth(metrics, text);
 				int textH = metrics.getHeight();
 				int idW = SwingUtilities.computeStringWidth(metrics, id);
 				int idH = metrics.getHeight();
-				g.setColor(Color.BLACK);
-				g.drawString(text, x + Math.max(5, (width - textW)/2), y + height - textH + 4);
-				g.drawString(id, x + Math.max(5, (width - idW)/2), y + idH);
+
 				
-				Rectangle drawingArea = new Rectangle(x + 2, y + 2, width - 5, height - 5 - textH);
+				if (extra != -1) {
+					String text2 = molec.getFieldStr()[extra].substring(0, 10)
+							       + " : " + molec.getValues()[extra];
+					g.setColor(Color.BLACK);
+					g.drawString(text, x + 4, y + height - textH - 2);
+					g.drawString(id, x + Math.max(4, (width - idW)/2), y + idH);
+					g.setColor(Color.BLUE);
+					g.drawString(text2, x + 4, y + height - 2);
+					textH = 2*textH + 6; 
+				} else {
+					g.setColor(Color.BLACK);
+					g.drawString(text, x + 4, y + height - 2);
+					g.drawString(id, x + Math.max(4, (width - idW)/2), y + idH);
+				}
+				
+				Rectangle drawingArea = new Rectangle(x + 4, y + 4, width - 3, height - 4 - textH);
 				AWTDrawVisitor visitor = new AWTDrawVisitor((Graphics2D) g);
 				renderer.paint(mol, visitor, drawingArea, true);
 			}
@@ -249,6 +270,13 @@ public class StructureDisplay extends JPanel{
 		};
 	}
 	
+	public int getExtraFieldInd() {
+		return extra;
+	}
+	public void setExtraFieldInd(int extra) {
+		this.extra = extra;
+		repaint();
+	}
 	public void paintComponent(Graphics g) {
 		this.setBackground(Color.white);
 		g.fillRect(0, 0, W, H);

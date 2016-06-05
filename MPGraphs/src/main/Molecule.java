@@ -28,9 +28,15 @@ public class Molecule implements Serializable, Comparable<Molecule> {
 	private Double potency;
 	private String fieldName;
 	private String molID = "";
-	private int index = -1; 	// this is the index of the molecule in AdjMatrix.molArray or -1 if no pairing exists 
+	private int index = -1; 							// this is the index of the molecule in 
+														//AdjMatrix.molArray or -1 if no pairing exists 
 	private Map<Integer, Set<Integer>> atomMapping;		// key is query atom number,
-	// value is set of target molecules as <Integer> indices of Adj.Matrix.molArray
+														// value is set of target molecules as <Integer> indices of 
+														// Adj.Matrix.molArray
+	private String[] fieldStr;							// string array of available fields from sdf
+	private String[] values;							// string array of values indexed as in fieldStr[] 
+	
+	
 	public Molecule(IAtomContainer ac, double potency) throws CloneNotSupportedException, CDKException {
 		StructureDiagramGenerator sdg = new StructureDiagramGenerator();
         sdg.setMolecule(ac.clone());
@@ -81,6 +87,22 @@ public class Molecule implements Serializable, Comparable<Molecule> {
 
 	public void setIndex(int index) {
 		this.index = index;
+	}
+
+	public String[] getFieldStr() {
+		return fieldStr;
+	}
+
+	public void setFieldStr(String[] fieldStr) {
+		this.fieldStr = fieldStr;
+	}
+
+	public String[] getValues() {
+		return values;
+	}
+
+	public void setValues(String[] values) {
+		this.values = values;
 	}
 
 	@Override

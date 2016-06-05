@@ -284,58 +284,56 @@ public final class SMSDpair implements java.io.Serializable {
 		return true;
 	}
 	
-	public static void main(String[] args) throws Exception {
-
-		SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
-		IAtomContainer mol2 = sp.parseSmiles("C1CCC([H])C(CCCCCCCC)C1"); //(args[0]);
-		IAtomContainer mol1 = sp.parseSmiles("CCCCCCCCC1C(OCCF)CCCC1"); //(args[1]);
-		StructureDiagramGenerator sdg = new StructureDiagramGenerator();
-        sdg.setMolecule(mol1.clone());
-		sdg.generateCoordinates();
-        mol1 = sdg.getMolecule();
-        sdg.setMolecule(mol2.clone());
-		sdg.generateCoordinates();
-        mol2 = sdg.getMolecule();
-		SMSDpair mcsp = new SMSDpair(mol1, mol2);
-		
-
-		
-		System.out.println(mcsp.getQryConnAtom());
-		System.out.println(mcsp.getTrgConnAtom());
-//		https://docs.oracle.com/javase/tutorial/uiswing/components/combobox.html
-//		IAtomContainer q1 = mcsp.getSMSD().getFirstAtomMapping().getMapCommonFragmentOnQuery();
-//		IAtomContainer t1 = mcsp.getSMSD().getFirstAtomMapping().getMapCommonFragmentOnTarget();
-//		IAtomContainer com = mcsp.getSMSD().getFirstAtomMapping().getCommonFragment();
-
-		JPanel panel = new JPanel();
-		panel.setPreferredSize(new Dimension(1500, 600));
-		StructureDisplay tdp1 = new StructureDisplay(mcsp.rxnmol());//(mcsp.query);
-		panel.add(tdp1);
-		StructureDisplay tdp2 = new StructureDisplay(mcsp.prdmol());
-		panel.add(tdp2);
-		StructureDisplay tdp3 = new StructureDisplay(mcsp.pairDiff()[0]);
-		tdp1.highlightSelect(mcsp.queryHi()); //keyset for query molecule
-		panel.add(tdp3);
-		StructureDisplay tdp4 = new StructureDisplay(mcsp.pairDiff()[1]);
-		tdp2.highlightSelect(mcsp.targetHi()); //values for target molecule
-		panel.add(tdp4);
-		//System.out.println(mcsp.pairDiff()[0]);
-		//System.out.println(mcsp.pairDiff()[1]);
-		System.out.println(mcsp.isValid());
-		
-
-
-		final JFrame f = new JFrame("Test");
-		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		f.getContentPane().setPreferredSize(new Dimension(1500, 600));
-		f.getContentPane().add(panel);
-
-		javax.swing.SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				f.pack();
-				f.setVisible(true);
-			}
-		});
-
-	}
+//	public static void main(String[] args) throws Exception {
+//
+//		SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+//		IAtomContainer mol2 = sp.parseSmiles("C1CCC([H])C(CCCCCCCC)C1"); //(args[0]);
+//		IAtomContainer mol1 = sp.parseSmiles("CCCCCCCCC1C(OCCF)CCCC1"); //(args[1]);
+//		StructureDiagramGenerator sdg = new StructureDiagramGenerator();
+//        sdg.setMolecule(mol1.clone());
+//		sdg.generateCoordinates();
+//        mol1 = sdg.getMolecule();
+//        sdg.setMolecule(mol2.clone());
+//		sdg.generateCoordinates();
+//        mol2 = sdg.getMolecule();
+//		SMSDpair mcsp = new SMSDpair(mol1, mol2);
+//		
+//
+//		
+//		System.out.println(mcsp.getQryConnAtom());
+//		System.out.println(mcsp.getTrgConnAtom());
+////		https://docs.oracle.com/javase/tutorial/uiswing/components/combobox.html
+////		IAtomContainer q1 = mcsp.getSMSD().getFirstAtomMapping().getMapCommonFragmentOnQuery();
+////		IAtomContainer t1 = mcsp.getSMSD().getFirstAtomMapping().getMapCommonFragmentOnTarget();
+////		IAtomContainer com = mcsp.getSMSD().getFirstAtomMapping().getCommonFragment();
+//
+//		JPanel panel = new JPanel();
+//		panel.setPreferredSize(new Dimension(1500, 600));
+//		StructureDisplay tdp1 = new StructureDisplay(mcsp.rxnmol());//(mcsp.query);
+//		panel.add(tdp1);
+//		StructureDisplay tdp2 = new StructureDisplay(mcsp.prdmol());
+//		panel.add(tdp2);
+//		StructureDisplay tdp3 = new StructureDisplay(mcsp.pairDiff()[0]);
+//		tdp1.highlightSelect(mcsp.queryHi()); //keyset for query molecule
+//		panel.add(tdp3);
+//		StructureDisplay tdp4 = new StructureDisplay(mcsp.pairDiff()[1]);
+//		tdp2.highlightSelect(mcsp.targetHi()); //values for target molecule
+//		panel.add(tdp4);
+//		System.out.println(mcsp.isValid());
+//		
+//
+//
+//		final JFrame f = new JFrame("Test");
+//		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//		f.getContentPane().setPreferredSize(new Dimension(1500, 600));
+//		f.getContentPane().add(panel);
+//
+//		javax.swing.SwingUtilities.invokeLater(new Runnable() {
+//			public void run() {
+//				f.pack();
+//				f.setVisible(true);
+//			}
+//		});
+//
+//	}
 }

@@ -44,7 +44,7 @@ public class TestSelection extends JPanel {
 	private RendererModel rm;
 	
 	public TestSelection(IAtomContainer ac) throws Exception {
-		StructureDisplay tdp = new StructureDisplay(ac);
+		StructureDisplay tdp = new StructureDisplay();
 		mol = ac;
 		renderer = tdp.getRenderer();
 		drawArea = new Rectangle(W-20, H-20);
