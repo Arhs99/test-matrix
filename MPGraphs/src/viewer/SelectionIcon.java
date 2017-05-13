@@ -18,6 +18,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.MouseInputAdapter;
 import javax.vecmath.Point2d;
 
+import main.Molecule;
+
 import org.openscience.cdk.geometry.GeometryUtil;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
@@ -43,10 +45,10 @@ public class SelectionIcon implements Icon {
 	private double pot;
 
 
-	public SelectionIcon(int iconWidth, int iconHeight, IAtomContainer ac,
+	public SelectionIcon(int iconWidth, int iconHeight, Molecule molec,
 			Double potency, String fieldStr, String molID, Collection<Integer> hiAtoms) throws Exception {
-		StructureDisplay tdp = new StructureDisplay(ac);
-		mol = ac;
+		StructureDisplay tdp = new StructureDisplay(molec, -1);
+		this.mol = molec.getMol();
 		renderer = tdp.getRenderer();
 		this.width = iconWidth;
 		this.height = iconHeight;
