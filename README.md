@@ -10,3 +10,7 @@ A copy of the jar file can be accessed via this link: https://drive.google.com/f
 This can be run by: ```java -jar MP.jar``` using openjdk v. 1.8
 
 ## Use
+A simple graphical interface makes use fairly intuitive
+## Screenshot
+(More in the images folder)
+![plot](https://github.com/Arhs99/test-matrix/blob/working/images/cards_viz.png)
